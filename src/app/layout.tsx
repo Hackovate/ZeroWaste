@@ -15,8 +15,11 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
-            <body>
+        <html lang="en" suppressHydrationWarning>
+            <head>
+                <link rel="icon" href="/assets/ZeroWaste-icon.svg" type="image/svg+xml" />
+            </head>
+            <body suppressHydrationWarning>
                 <AppProvider>
                     {children}
                     <Toaster />

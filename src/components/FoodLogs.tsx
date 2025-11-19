@@ -83,7 +83,7 @@ export const FoodLogs: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1>Food Logs</h1>
-          <p className="text-[var(--color-700)] mt-1">
+          <p className="text-(--color-700) mt-1">
             Track your daily food consumption
           </p>
         </div>
@@ -185,7 +185,7 @@ export const FoodLogs: React.FC = () => {
                     <img src={imagePreview} alt="Preview" className="w-full h-32 object-cover rounded-md" />
                   </div>
                 )}
-                <p className="text-xs text-[var(--color-700)]">
+                <p className="text-xs text-(--color-700)">
                   Upload receipt or food label image (JPG/PNG)
                 </p>
               </div>
@@ -249,8 +249,8 @@ export const FoodLogs: React.FC = () => {
                         {log.imageUrl ? (
                           <img src={log.imageUrl} alt={log.itemName} className="w-10 h-10 object-cover rounded" />
                         ) : (
-                          <div className="w-10 h-10 bg-[var(--color-300)] rounded flex items-center justify-center">
-                            <ImageIcon className="w-5 h-5 text-[var(--color-700)]" />
+                          <div className="w-10 h-10 bg-(--color-300) rounded flex items-center justify-center">
+                            <ImageIcon className="w-5 h-5 text-(--color-700)" />
                           </div>
                         )}
                       </TableCell>
@@ -270,9 +270,9 @@ export const FoodLogs: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <FileText className="w-16 h-16 text-[var(--color-300)] mx-auto mb-4" />
+              <FileText className="w-16 h-16 text-(--color-300) mx-auto mb-4" />
               <h3>No food logs yet</h3>
-              <p className="text-[var(--color-700)] mt-2 mb-4">
+              <p className="text-(--color-700) mt-2 mb-4">
                 {filterCategory !== 'all' ? 'No logs in this category' : 'Start tracking your food consumption'}
               </p>
               <Button onClick={() => setIsDialogOpen(true)}>

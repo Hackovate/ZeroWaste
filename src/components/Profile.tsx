@@ -54,7 +54,7 @@ export const Profile: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1>Profile</h1>
-          <p className="text-[var(--color-700)] mt-1">
+          <p className="text-(--color-700) mt-1">
             Manage your account information
           </p>
         </div>
@@ -189,7 +189,7 @@ export const Profile: React.FC = () => {
                   <Label>Location</Label>
                   <div className="mt-1 text-sm">
                     {currentUser.location.district && <p>{currentUser.location.district}, {currentUser.location.division}</p>}
-                    {!currentUser.location.district && <p className="text-[var(--color-700)]">Not specified</p>}
+                    {!currentUser.location.district && <p className="text-(--color-700)">Not specified</p>}
                   </div>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export const Profile: React.FC = () => {
                       <Badge key={pref} variant="secondary">{pref}</Badge>
                     ))
                   ) : (
-                    <p className="text-[var(--color-700)]">No dietary preferences set</p>
+                    <p className="text-(--color-700)">No dietary preferences set</p>
                   )}
                 </div>
               </div>
@@ -217,23 +217,23 @@ export const Profile: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 sm:grid-cols-3">
-            <div className="text-center p-4 bg-[var(--color-300)]/30 rounded-lg">
+            <div className="text-center p-4 bg-(--color-300)/30 rounded-lg">
               <p className="text-2xl font-semibold text-primary">
                 {currentUser.householdSize}
               </p>
-              <p className="text-sm text-[var(--color-700)] mt-1">Household Members</p>
+              <p className="text-sm text-(--color-700) mt-1">Household Members</p>
             </div>
-            <div className="text-center p-4 bg-[var(--color-300)]/30 rounded-lg">
+            <div className="text-center p-4 bg-(--color-300)/30 rounded-lg">
               <p className="text-2xl font-semibold text-primary">
                 {currentUser.dietaryPreferences.length}
               </p>
-              <p className="text-sm text-[var(--color-700)] mt-1">Dietary Preferences</p>
+              <p className="text-sm text-(--color-700) mt-1">Dietary Preferences</p>
             </div>
-            <div className="text-center p-4 bg-[var(--color-300)]/30 rounded-lg">
+            <div className="text-center p-4 bg-(--color-300)/30 rounded-lg">
               <p className="text-sm font-semibold text-primary">
                 {currentUser.location.district || currentUser.location.division || 'Not specified'}
               </p>
-              <p className="text-sm text-[var(--color-700)] mt-1">Location</p>
+              <p className="text-sm text-(--color-700) mt-1">Location</p>
             </div>
           </div>
         </CardContent>

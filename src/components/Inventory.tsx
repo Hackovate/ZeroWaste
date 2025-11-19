@@ -126,7 +126,7 @@ export const Inventory: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1>Inventory Management</h1>
-          <p className="text-[var(--color-700)] mt-1">
+          <p className="text-(--color-700) mt-1">
             Track and manage your food stock
           </p>
         </div>
@@ -191,7 +191,7 @@ export const Inventory: React.FC = () => {
               </DialogHeader>
               <div className="space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-700)] w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-(--color-700) w-4 h-4" />
                   <Input
                     placeholder="Search food items..."
                     value={foodDbSearch}
@@ -201,15 +201,15 @@ export const Inventory: React.FC = () => {
                 </div>
                 <div className="grid gap-2">
                   {filteredFoodDb.map(item => (
-                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-[var(--color-300)]/50 transition-colors">
+                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-(--color-300)/50 transition-colors">
                       <div>
                         <p>{item.name}</p>
                         <div className="flex gap-2 mt-1">
                           <Badge variant="outline" className="capitalize text-xs">{item.category}</Badge>
-                          <span className="text-xs text-[var(--color-700)]">
+                          <span className="text-xs text-(--color-700)">
                             {item.expirationEstimate} days shelf life
                           </span>
-                          <span className="text-xs text-[var(--color-700)]">
+                          <span className="text-xs text-(--color-700)">
                             TK {item.price.toFixed(2)}
                           </span>
                         </div>
@@ -343,7 +343,7 @@ export const Inventory: React.FC = () => {
               <CardDescription>{inventory.length} items in stock</CardDescription>
             </div>
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-700)] w-4 h-4" />
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-(--color-700) w-4 h-4" />
               <Input
                 placeholder="Search inventory..."
                 value={searchQuery}
@@ -376,19 +376,19 @@ export const Inventory: React.FC = () => {
                     <CardContent className="space-y-3">
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                          <p className="text-[var(--color-700)]">Quantity</p>
+                          <p className="text-(--color-700)">Quantity</p>
                           <p>{item.quantity} {item.unit || 'pcs'}</p>
                         </div>
                         <div>
-                          <p className="text-[var(--color-700)]">Price</p>
+                          <p className="text-(--color-700)">Price</p>
                           <p>TK {item.price.toFixed(2)}</p>
                         </div>
                         <div>
-                          <p className="text-[var(--color-700)]">Days in Stock</p>
+                          <p className="text-(--color-700)">Days in Stock</p>
                           <p>{daysInInventory}</p>
                         </div>
                         <div>
-                          <p className="text-[var(--color-700)]">Shelf Life</p>
+                          <p className="text-(--color-700)">Shelf Life</p>
                           <p>{item.expirationEstimate} days</p>
                         </div>
                       </div>
@@ -409,9 +409,9 @@ export const Inventory: React.FC = () => {
             </div>
           ) : (
             <div className="text-center py-12">
-              <Package className="w-16 h-16 text-[var(--color-300)] mx-auto mb-4" />
+              <Package className="w-16 h-16 text-(--color-300) mx-auto mb-4" />
               <h3>No items in inventory</h3>
-              <p className="text-[var(--color-700)] mt-2 mb-4">
+              <p className="text-(--color-700) mt-2 mb-4">
                 {searchQuery ? 'No items match your search' : 'Start adding items to your inventory'}
               </p>
               {!searchQuery && (

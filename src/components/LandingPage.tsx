@@ -71,20 +71,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEF5F4] via-white to-[#F0F0F0]">
+    <div className="min-h-screen bg-linear-to-br from-[#FEF5F4] via-white to-[#F0F0F0]">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="text-center">
             <div className="flex justify-center mb-6">
-              <div className="w-20 h-20 rounded-full bg-[var(--color-primary)] flex items-center justify-center shadow-lg">
-                <ChefHat className="w-10 h-10 text-white" />
+              <div className="h-24 flex items-center justify-center">
+                <img src="/assets/ZeroWaste-Full-Logo.svg" alt="FoodTrack" className="h-full" />
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl text-[var(--color-primary)] mb-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl text-(--color-primary) mb-6">
               Welcome to FoodTrack
             </h1>
-            <p className="text-xl sm:text-2xl text-[var(--color-700)] max-w-3xl mx-auto mb-8">
+            <p className="text-xl sm:text-2xl text-(--color-700) max-w-3xl mx-auto mb-8">
               Your intelligent companion for reducing food waste, saving money, and living sustainably
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -92,7 +92,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 Get Started Free
                 <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-              <p className="text-sm text-[var(--color-700)]">
+              <p className="text-sm text-(--color-700)">
                 No credit card required • Free forever
               </p>
             </div>
@@ -105,7 +105,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl mb-4">Why Choose FoodTrack?</h2>
-            <p className="text-lg text-[var(--color-700)] max-w-2xl mx-auto">
+            <p className="text-lg text-(--color-700) max-w-2xl mx-auto">
               Join thousands of households making a difference in food waste reduction
             </p>
           </div>
@@ -113,20 +113,20 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             {benefits.map((benefit) => {
               const Icon = benefit.icon;
               return (
-                <Card key={benefit.title} className="text-center border-2 hover:border-[var(--color-primary)] transition-colors">
+                <Card key={benefit.title} className="text-center border-2 hover:border-(--color-primary) transition-colors">
                   <CardHeader>
                     <div className="flex justify-center mb-4">
                       <div className="w-16 h-16 rounded-full bg-[#FEF5F4] flex items-center justify-center">
-                        <Icon className="w-8 h-8 text-[var(--color-primary)]" />
+                        <Icon className="w-8 h-8 text-(--color-primary)" />
                       </div>
                     </div>
                     <CardTitle>{benefit.title}</CardTitle>
-                    <div className="text-3xl text-[var(--color-primary)] mt-2">
+                    <div className="text-3xl text-(--color-primary) mt-2">
                       {benefit.stat}
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-[var(--color-700)]">{benefit.description}</p>
+                    <p className="text-(--color-700)">{benefit.description}</p>
                   </CardContent>
                 </Card>
               );
@@ -140,7 +140,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl mb-4">Powerful Features</h2>
-            <p className="text-lg text-[var(--color-700)] max-w-2xl mx-auto">
+            <p className="text-lg text-(--color-700) max-w-2xl mx-auto">
               Everything you need to manage your food inventory efficiently
             </p>
           </div>
@@ -150,8 +150,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               return (
                 <Card key={feature.title} className="hover:shadow-lg transition-shadow">
                   <CardHeader>
-                    <div className="w-12 h-12 rounded-lg bg-[var(--color-primary)]/10 flex items-center justify-center mb-3">
-                      <Icon className="w-6 h-6 text-[var(--color-primary)]" />
+                    <div className="w-12 h-12 rounded-lg bg-(--color-primary)/10 flex items-center justify-center mb-3">
+                      <Icon className="w-6 h-6 text-(--color-primary)" />
                     </div>
                     <CardTitle className="text-lg">{feature.title}</CardTitle>
                   </CardHeader>
@@ -170,18 +170,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl mb-4">How It Works</h2>
-            <p className="text-lg text-[var(--color-700)]">
+            <p className="text-lg text-(--color-700)">
               Get started in just a few simple steps
             </p>
           </div>
           <div className="space-y-4">
             {steps.map((step, index) => (
               <div key={index} className="flex items-center gap-4 p-4 rounded-lg bg-[#FEF5F4] hover:bg-[#FEF5F4]/80 transition-colors">
-                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-[var(--color-primary)] text-white flex items-center justify-center text-lg">
+                <div className="shrink-0 w-10 h-10 rounded-full bg-(--color-primary) text-white flex items-center justify-center text-lg">
                   {index + 1}
                 </div>
                 <p className="text-lg">{step}</p>
-                <CheckCircle2 className="ml-auto w-6 h-6 text-[var(--color-primary)]" />
+                <CheckCircle2 className="ml-auto w-6 h-6 text-(--color-primary)" />
               </div>
             ))}
           </div>
@@ -196,7 +196,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       {/* CTA Section */}
       <div className="py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="bg-gradient-to-r from-[var(--color-primary)] to-[#FF6B63] text-white border-0 shadow-xl">
+          <Card className="bg-linear-to-r from-(--color-primary) to-[#FF6B63] text-white border-0 shadow-xl">
             <CardContent className="p-8 sm:p-12 text-center">
               <h2 className="text-3xl sm:text-4xl mb-4 text-white">
                 Ready to Make a Difference?
@@ -208,7 +208,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 onClick={onGetStarted} 
                 size="lg" 
                 variant="secondary"
-                className="h-14 px-8 text-lg bg-white text-[var(--color-primary)] hover:bg-gray-100"
+                className="h-14 px-8 text-lg bg-white text-(--color-primary) hover:bg-gray-100"
               >
                 Get Started Now - It's Free!
               </Button>
@@ -220,7 +220,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       {/* Footer */}
       <div className="border-t bg-white py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-[var(--color-700)]">
+          <div className="text-center text-(--color-700)">
             <p className="mb-2">© 2025 FoodTrack. All rights reserved.</p>
             <p className="text-sm">Making food waste reduction accessible to everyone</p>
           </div>

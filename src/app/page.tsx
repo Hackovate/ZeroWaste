@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useApp } from '@/lib/AppContext';
 import { TopBar } from '@/components/TopBar';
+import { AppSidebar } from '@/components/AppSidebar';
 import { LandingPage } from '@/components/LandingPage';
 import { Login } from '@/components/Login';
 import { Onboarding } from '@/components/Onboarding';
@@ -15,6 +16,7 @@ import { Resources } from '@/components/Resources';
 export default function Home() {
     const { currentUser } = useApp();
     const [currentView, setCurrentView] = useState('dashboard');
+    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
     const [showLogin, setShowLogin] = useState(false);
 
     if (!currentUser) {
@@ -47,11 +49,19 @@ export default function Home() {
     };
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-background flex flex-col">
             <TopBar currentView={currentView} onNavigate={setCurrentView} />
-            <main className="pt-0">
-                {renderView()}
-            </main>
+            <div className="flex flex-1">
+                <AppSidebar
+                    currentView={currentView}
+                    onNavigate={setCurrentView}
+                    isCollapsed={isSidebarCollapsed}
+                    onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                />
+                <main className="flex-1 pt-0">
+                    {renderView()}
+                </main>
+            </div>
         </div>
     );
 }

@@ -73,11 +73,11 @@ export const Login: React.FC<LoginProps> = ({ onBackToHome }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#FEF5F4] via-white to-[#F0F0F0] p-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-[#FEF5F4] via-white to-[#F0F0F0] p-4">
       {onBackToHome && (
         <button
           onClick={onBackToHome}
-          className="absolute top-4 left-4 flex items-center gap-2 text-[var(--color-700)] hover:text-[var(--color-primary)] transition-colors"
+          className="absolute top-4 left-4 flex items-center gap-2 text-(--color-700) hover:text-(--color-primary) transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>Back to Home</span>
@@ -86,12 +86,12 @@ export const Login: React.FC<LoginProps> = ({ onBackToHome }) => {
       <Card className="w-full max-w-md shadow-lg bg-white border-0">
         <CardHeader className="text-center space-y-4 pb-8">
           <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-full bg-[var(--color-primary)] flex items-center justify-center shadow-md">
-              <ChefHat className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 rounded-lg flex items-center justify-center overflow-hidden">
+              <img src="/assets/ZeroWaste-icon.svg" alt="Logo" className="w-full h-full object-contain" />
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl text-[var(--color-primary)]">
+            <CardTitle className="text-3xl text-(--color-primary)">
               {isLogin ? 'Welcome Back' : 'Create Account'}
             </CardTitle>
             <CardDescription className="text-base mt-2">
@@ -154,7 +154,7 @@ export const Login: React.FC<LoginProps> = ({ onBackToHome }) => {
                   <button
                     type="button"
                     onClick={() => setIsLogin(false)}
-                    className="text-[var(--color-primary)] hover:underline"
+                    className="text-(--color-primary) hover:underline"
                   >
                     Sign up
                   </button>
@@ -250,7 +250,7 @@ export const Login: React.FC<LoginProps> = ({ onBackToHome }) => {
                   <button
                     type="button"
                     onClick={() => setIsLogin(true)}
-                    className="text-[var(--color-primary)] hover:underline"
+                    className="text-(--color-primary) hover:underline"
                   >
                     Login
                   </button>

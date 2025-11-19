@@ -39,52 +39,22 @@ export const TopBar: React.FC<TopBarProps> = ({ currentView, onNavigate }) => {
 
   return (
     <header className="border-b bg-white sticky top-0 z-50 h-16">
-      <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Left: Logo and Mobile Menu */}
-        <div className="flex items-center gap-4">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-64">
-              <SheetTitle>Navigation Menu</SheetTitle>
-              <div className="flex flex-col gap-2 mt-8">
-                {navItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => onNavigate(item.id)}
-                      className={`w-full px-4 py-3 rounded-lg flex items-center gap-3 transition-colors ${
-                        currentView === item.id
-                          ? 'bg-primary text-white'
-                          : 'text-[var(--color-700)] hover:bg-[var(--color-300)]'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          <h1 
-            className="text-primary cursor-pointer select-none" 
+      <div className="h-full flex items-center justify-between" style={{ padding: '0', paddingRight: '1rem' }}>
+        {/* Left: Logo */}
+        <div className="flex items-center h-full pl-3">
+          <div 
+            className="cursor-pointer select-none h-12" 
             onClick={() => onNavigate('dashboard')}
           >
-            FoodTrack
-          </h1>
+            <img src="/assets/ZeroWaste-Full-Logo.svg" alt="FoodTrack" className="h-full" />
+          </div>
         </div>
 
         {/* Right: Profile Avatar Dropdown */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="relative h-10 w-10 rounded-full focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
-              <Avatar className="h-10 w-10 cursor-pointer border-2 border-[var(--color-300)] hover:border-primary transition-colors">
+              <Avatar className="h-10 w-10 cursor-pointer border-2 border-(--color-300) hover:border-primary transition-colors">
                 <AvatarFallback className="bg-primary text-white">
                   {currentUser && getInitials(currentUser.name)}
                 </AvatarFallback>
@@ -95,7 +65,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentView, onNavigate }) => {
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p>{currentUser?.name}</p>
-                <p className="text-xs text-[var(--color-700)]">
+                <p className="text-xs text-(--color-700)">
                   {currentUser?.email}
                 </p>
               </div>
