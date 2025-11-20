@@ -3,3 +3,10 @@ node_modules
 *.hot-update.json
 *.hot-update.js
 .next/
+.env.local
+.env*.local
+.vercel
+*.tsbuildinfo
+dist/
+build/
+out/
