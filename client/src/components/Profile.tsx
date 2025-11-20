@@ -265,7 +265,7 @@ export const Profile: React.FC = () => {
                     className="absolute bottom-0 right-0 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
                   >
                     {uploadingImages['user'] ? (
-                      <LoadingSpinner size="xs" />
+                      <LoadingSpinner size="sm" />
                     ) : (
                       <Upload className="w-3.5 h-3.5" />
                     )}
@@ -598,7 +598,7 @@ export const Profile: React.FC = () => {
                                   className="absolute bottom-0 right-0 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center cursor-pointer hover:bg-primary/90 transition-colors"
                                 >
                                   {uploadingImages[member.id] ? (
-                                    <LoadingSpinner size="xs" />
+                                    <LoadingSpinner size="sm" />
                                   ) : (
                                     <Upload className="w-3 h-3" />
                                   )}

@@ -10,8 +10,6 @@ const nextConfig = {
             },
         ],
     },
-    // Optimize production builds
-    swcMinify: true,
     // Ensure proper output for Vercel
     output: 'standalone',
 };

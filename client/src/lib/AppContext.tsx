@@ -113,8 +113,20 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         setResourcesPagination(null);
       }
     } catch (error: any) {
+      // Handle network errors gracefully (backend might not be running)
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.warn('Backend server is not available. Resources will not be loaded.');
+        setResources([]);
+        setResourcesPagination(null);
+        return;
+      }
+      // Log other errors for debugging
       console.error('Failed to fetch resources:', error);
-      console.error('Error details:', error.response?.data || error.message);
+      if (error.response) {
+        console.error('Error response:', error.response.data);
+      } else {
+        console.error('Error message:', error.message);
+      }
       setResources([]);
       setResourcesPagination(null);
     }
