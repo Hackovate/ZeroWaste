@@ -68,7 +68,7 @@ export const Onboarding: React.FC = () => {
       <Card className="w-full max-w-2xl shadow-lg">
         <CardHeader className="text-center pb-4">
           <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 rounded-full bg-(--color-primary) flex items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center">
               <ChefHat className="w-8 h-8 text-white" />
             </div>
           </div>
@@ -77,9 +77,9 @@ export const Onboarding: React.FC = () => {
             Let's personalize your experience. This will only take a moment.
           </CardDescription>
           <div className="flex justify-center gap-2 mt-4">
-            <div className={`h-2 w-16 rounded-full ${step >= 1 ? 'bg-(--color-primary)' : 'bg-gray-200'}`} />
-            <div className={`h-2 w-16 rounded-full ${step >= 2 ? 'bg-(--color-primary)' : 'bg-gray-200'}`} />
-            <div className={`h-2 w-16 rounded-full ${step >= 3 ? 'bg-(--color-primary)' : 'bg-gray-200'}`} />
+            <div className={`h-2 w-16 rounded-full ${step >= 1 ? 'bg-primary' : 'bg-gray-200'}`} />
+            <div className={`h-2 w-16 rounded-full ${step >= 2 ? 'bg-primary' : 'bg-gray-200'}`} />
+            <div className={`h-2 w-16 rounded-full ${step >= 3 ? 'bg-primary' : 'bg-gray-200'}`} />
           </div>
         </CardHeader>
         <CardContent className="pt-6">
@@ -126,8 +126,8 @@ export const Onboarding: React.FC = () => {
                         onClick={() => setOnboardingData({ ...onboardingData, householdSize: size })}
                         className={`w-12 h-12 rounded-full border-2 transition-all ${
                           onboardingData.householdSize === size
-                            ? 'border-(--color-primary) bg-(--color-primary) text-white'
-                            : 'border-gray-300 hover:border-(--color-primary)'
+                            ? 'border-primary bg-primary text-white'
+                            : 'border-gray-300 hover:border-primary'
                         }`}
                       >
                         {size}
@@ -148,7 +148,7 @@ export const Onboarding: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setOnboardingData({ ...onboardingData, householdSize: 9 })}
-                    className="w-full text-sm text-(--color-primary) hover:underline mt-2"
+                    className="w-full text-sm text-primary hover:underline mt-2"
                   >
                     More than 8
                   </button>
@@ -174,8 +174,8 @@ export const Onboarding: React.FC = () => {
                         onClick={() => toggleDietaryPreference(pref)}
                         className={`p-3 rounded-lg border-2 transition-all text-sm ${
                           onboardingData.dietaryPreferences.includes(pref)
-                            ? 'border-(--color-primary) bg-[#FEF5F4] text-(--color-primary)'
-                            : 'border-gray-200 hover:border-(--color-primary) hover:bg-gray-50'
+                            ? 'border-primary bg-[#FEF5F4] text-primary'
+                            : 'border-gray-200 hover:border-primary hover:bg-gray-50'
                         }`}
                       >
                         {pref}

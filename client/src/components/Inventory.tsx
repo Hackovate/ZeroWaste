@@ -8,10 +8,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { FOOD_DATABASE, FoodItem, UNITS } from '../lib/data';
 import { Plus, Trash2, Edit2, Package, Search, Settings, X, Upload, Image as ImageIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageWithFallback } from './figma/ImageWithFallback';
+import { LoadingSpinner } from './ui/loading';
 
 export const Inventory: React.FC = () => {
   const { inventory, addInventoryItem, updateInventoryItem, deleteInventoryItem, categories, addCategory, deleteCategory, uploadInventoryImage } = useApp();
@@ -26,6 +28,13 @@ export const Inventory: React.FC = () => {
   const [newCategory, setNewCategory] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [loadingStates, setLoadingStates] = useState({
+    adding: false,
+    editing: false,
+    deleting: {} as Record<string, boolean>,
+    addingFromDb: {} as Record<string, boolean>,
+    uploadingImage: false,
+  });
 
   const [formData, setFormData] = useState({
     name: '',
@@ -37,62 +46,78 @@ export const Inventory: React.FC = () => {
     imageUrl: '' as string | undefined,
   });
 
-  const handleAddFromDatabase = (foodItem: FoodItem) => {
-    addInventoryItem({
-      ...foodItem,
-      quantity: 1,
-      unit: 'pcs',
-    });
-    setIsFoodDbDialogOpen(false);
-    toast.success(`${foodItem.name} added to inventory!`);
+  const handleAddFromDatabase = async (foodItem: FoodItem) => {
+    setLoadingStates(prev => ({ ...prev, addingFromDb: { ...prev.addingFromDb, [foodItem.id]: true } }));
+    try {
+      await addInventoryItem({
+        ...foodItem,
+        quantity: 1,
+        unit: 'pcs',
+      });
+      setIsFoodDbDialogOpen(false);
+      toast.success(`${foodItem.name} added to inventory!`);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, addingFromDb: { ...prev.addingFromDb, [foodItem.id]: false } }));
+    }
   };
 
   const handleAddManual = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoadingStates(prev => ({ ...prev, adding: true, uploadingImage: !!imageFile }));
     
-    let imageUrl = '';
-    if (imageFile) {
-      imageUrl = await uploadInventoryImage(imageFile);
+    try {
+      let imageUrl = '';
+      if (imageFile) {
+        imageUrl = await uploadInventoryImage(imageFile);
+      }
+      
+      await addInventoryItem({
+        ...formData,
+        imageUrl: imageUrl || undefined,
+      });
+      
+      setFormData({
+        name: '',
+        category: '',
+        expirationEstimate: 7,
+        price: 0,
+        quantity: 1,
+        unit: 'pcs',
+        imageUrl: '',
+      });
+      setImageFile(null);
+      setImagePreview('');
+      setIsAddDialogOpen(false);
+      toast.success('Item added to inventory!');
+    } finally {
+      setLoadingStates(prev => ({ ...prev, adding: false, uploadingImage: false }));
     }
-    
-    addInventoryItem({
-      ...formData,
-      imageUrl: imageUrl || undefined,
-    });
-    
-    setFormData({
-      name: '',
-      category: '',
-      expirationEstimate: 7,
-      price: 0,
-      quantity: 1,
-      unit: 'pcs',
-      imageUrl: '',
-    });
-    setImageFile(null);
-    setImagePreview('');
-    setIsAddDialogOpen(false);
-    toast.success('Item added to inventory!');
   };
 
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (selectedItem) {
-      let imageUrl = formData.imageUrl;
-      if (imageFile) {
-        imageUrl = await uploadInventoryImage(imageFile);
+      setLoadingStates(prev => ({ ...prev, editing: true, uploadingImage: !!imageFile }));
+      
+      try {
+        let imageUrl = formData.imageUrl;
+        if (imageFile) {
+          imageUrl = await uploadInventoryImage(imageFile);
+        }
+        
+        await updateInventoryItem(selectedItem.id, {
+          ...formData,
+          imageUrl,
+        });
+        
+        setIsEditDialogOpen(false);
+        setSelectedItem(null);
+        setImageFile(null);
+        setImagePreview('');
+        toast.success('Item updated successfully!');
+      } finally {
+        setLoadingStates(prev => ({ ...prev, editing: false, uploadingImage: false }));
       }
-      
-      updateInventoryItem(selectedItem.id, {
-        ...formData,
-        imageUrl,
-      });
-      
-      setIsEditDialogOpen(false);
-      setSelectedItem(null);
-      setImageFile(null);
-      setImagePreview('');
-      toast.success('Item updated successfully!');
     }
   };
 
@@ -112,9 +137,14 @@ export const Inventory: React.FC = () => {
     setIsEditDialogOpen(true);
   };
 
-  const handleDelete = (id: string, name: string) => {
-    deleteInventoryItem(id);
-    toast.success(`${name} removed from inventory!`);
+  const handleDelete = async (id: string, name: string) => {
+    setLoadingStates(prev => ({ ...prev, deleting: { ...prev.deleting, [id]: true } }));
+    try {
+      await deleteInventoryItem(id);
+      toast.success(`${name} removed from inventory!`);
+    } finally {
+      setLoadingStates(prev => ({ ...prev, deleting: { ...prev.deleting, [id]: false } }));
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -260,9 +290,22 @@ export const Inventory: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                      <Button size="sm" onClick={() => handleAddFromDatabase(item)}>
-                        <Plus className="w-4 h-4 mr-1" />
-                        Add
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleAddFromDatabase(item)}
+                        disabled={loadingStates.addingFromDb[item.id]}
+                      >
+                        {loadingStates.addingFromDb[item.id] ? (
+                          <>
+                            <LoadingSpinner size="sm" className="mr-1" />
+                            Adding...
+                          </>
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add
+                          </>
+                        )}
                       </Button>
                     </div>
                   ))}
@@ -304,8 +347,11 @@ export const Inventory: React.FC = () => {
                       type="number"
                       min="0.1"
                       step="0.1"
-                      value={formData.quantity}
-                      onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) })}
+                      value={formData.quantity || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({ ...formData, quantity: value === '' ? 0 : parseFloat(value) || 0 });
+                      }}
                       required
                     />
                   </div>
@@ -334,8 +380,11 @@ export const Inventory: React.FC = () => {
                       type="number"
                       min="0"
                       step="0.01"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                      value={formData.price || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({ ...formData, price: value === '' ? 0 : parseFloat(value) || 0 });
+                      }}
                       required
                     />
                   </div>
@@ -345,8 +394,11 @@ export const Inventory: React.FC = () => {
                       id="expiration"
                       type="number"
                       min="1"
-                      value={formData.expirationEstimate}
-                      onChange={(e) => setFormData({ ...formData, expirationEstimate: parseInt(e.target.value) })}
+                      value={formData.expirationEstimate || ''}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setFormData({ ...formData, expirationEstimate: value === '' ? 7 : parseInt(value) || 7 });
+                      }}
                       required
                     />
                   </div>
@@ -388,8 +440,27 @@ export const Inventory: React.FC = () => {
                   )}
                 </div>
                 <div className="flex gap-2">
-                  <Button type="submit" className="flex-1">Add Item</Button>
-                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)} className="flex-1">
+                  <Button 
+                    type="submit" 
+                    className="flex-1" 
+                    disabled={loadingStates.adding || loadingStates.uploadingImage}
+                  >
+                    {loadingStates.adding || loadingStates.uploadingImage ? (
+                      <>
+                        <LoadingSpinner size="sm" className="mr-2" />
+                        {loadingStates.uploadingImage ? 'Uploading...' : 'Adding...'}
+                      </>
+                    ) : (
+                      'Add Item'
+                    )}
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => setIsAddDialogOpen(false)} 
+                    className="flex-1"
+                    disabled={loadingStates.adding || loadingStates.uploadingImage}
+                  >
                     Cancel
                   </Button>
                 </div>
@@ -400,28 +471,35 @@ export const Inventory: React.FC = () => {
       </div>
 
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex-1">
-              <CardTitle>Current Inventory</CardTitle>
-              <CardDescription>{filteredInventory.length} of {inventory.length} items</CardDescription>
+        <CardHeader className="pb-4">
+          <div className="space-y-4">
+            {/* Title Section */}
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl">Current Inventory</CardTitle>
+                <CardDescription className="mt-1">
+                  {filteredInventory.length} of {inventory.length} items
+                </CardDescription>
+              </div>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <div className="relative flex-1 sm:flex-initial sm:w-48">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-(--color-700) w-4 h-4" />
+            
+            {/* Search and Filter Section */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1 min-w-0">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4 z-10" />
                 <Input
-                  placeholder="Search..."
+                  placeholder="Search items..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 w-full"
                 />
               </div>
               <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-32 sm:w-36">
-                  <SelectValue placeholder="Filter" />
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map(category => (
                     <SelectItem key={category} value={category} className="capitalize">
                       {category}
@@ -434,68 +512,105 @@ export const Inventory: React.FC = () => {
         </CardHeader>
         <CardContent>
           {filteredInventory.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredInventory.map(item => {
-                const expirationInfo = getExpirationStatus(item);
-                const daysInInventory = getDaysInInventory(item.dateAdded);
-                
-                return (
-                  <Card key={item.id}>
-                    <CardHeader className="pb-3">
-                      <div className="flex justify-between items-start gap-2">
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-base truncate" title={item.name}>{item.name}</CardTitle>
-                          <CardDescription className="capitalize">{item.category}</CardDescription>
-                        </div>
-                        <Badge variant={expirationInfo.color as any} className="flex-shrink-0">
-                          {expirationInfo.label}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    {item.imageUrl && (
-                      <div className="px-6 pb-3">
-                        <div className="relative w-full h-32 rounded-lg overflow-hidden border">
-                          <ImageWithFallback
-                            src={item.imageUrl}
-                            alt={item.name}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </div>
-                    )}
-                    <CardContent className="space-y-3">
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <p className="text-(--color-700)">Quantity</p>
-                          <p>{item.quantity} {item.unit || 'pcs'}</p>
-                        </div>
-                        <div>
-                          <p className="text-(--color-700)">Price</p>
-                          <p>TK {item.price.toFixed(2)}</p>
-                        </div>
-                        <div>
-                          <p className="text-(--color-700)">Days in Stock</p>
-                          <p>{daysInInventory}</p>
-                        </div>
-                        <div>
-                          <p className="text-(--color-700)">Shelf Life</p>
-                          <p>{item.expirationEstimate} days</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => openEditDialog(item)} className="flex-1">
-                          <Edit2 className="w-3 h-3 mr-1" />
-                          Edit
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleDelete(item.id, item.name)} className="flex-1">
-                          <Trash2 className="w-3 h-3 mr-1 text-destructive" />
-                          Remove
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-16">Image</TableHead>
+                    <TableHead>Item Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Quantity</TableHead>
+                    <TableHead>Price</TableHead>
+                    <TableHead>Days in Stock</TableHead>
+                    <TableHead>Shelf Life</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredInventory.map(item => {
+                    const expirationInfo = getExpirationStatus(item);
+                    const daysInInventory = getDaysInInventory(item.dateAdded);
+                    
+                    return (
+                      <TableRow 
+                        key={item.id} 
+                        className="hover:bg-muted/50 transition-colors cursor-pointer"
+                        onClick={() => openEditDialog(item)}
+                      >
+                        <TableCell>
+                          {item.imageUrl ? (
+                            <div className="relative w-12 h-12 rounded-md overflow-hidden border">
+                              <ImageWithFallback
+                                src={item.imageUrl}
+                                alt={item.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
+                              <Package className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">{item.name}</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="capitalize">
+                            {item.category}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">
+                            {item.quantity} {item.unit || 'pcs'}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-medium">TK {item.price.toFixed(2)}</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">{daysInInventory} days</div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="text-sm">{item.expirationEstimate} days</div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={expirationInfo.color as any} className="capitalize">
+                            {expirationInfo.label}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => openEditDialog(item)}
+                              disabled={loadingStates.deleting[item.id]}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              onClick={() => handleDelete(item.id, item.name)}
+                              disabled={loadingStates.deleting[item.id]}
+                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                            >
+                              {loadingStates.deleting[item.id] ? (
+                                <LoadingSpinner size="sm" />
+                              ) : (
+                                <Trash2 className="w-4 h-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
           ) : (
             <div className="text-center py-12">
@@ -547,8 +662,11 @@ export const Inventory: React.FC = () => {
                   type="number"
                   min="0.1"
                   step="0.1"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: parseFloat(e.target.value) })}
+                  value={formData.quantity || ''}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setFormData({ ...formData, quantity: value === '' ? 0 : parseFloat(value) || 0 });
+                  }}
                   required
                 />
               </div>
@@ -576,8 +694,11 @@ export const Inventory: React.FC = () => {
                 type="number"
                 min="0"
                 step="0.01"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: parseFloat(e.target.value) })}
+                value={formData.price || ''}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setFormData({ ...formData, price: value === '' ? 0 : parseFloat(value) || 0 });
+                }}
                 required
               />
             </div>
@@ -600,8 +721,27 @@ export const Inventory: React.FC = () => {
               )}
             </div>
             <div className="flex gap-2">
-              <Button type="submit" className="flex-1">Save Changes</Button>
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)} className="flex-1">
+              <Button 
+                type="submit" 
+                className="flex-1"
+                disabled={loadingStates.editing || loadingStates.uploadingImage}
+              >
+                {loadingStates.editing || loadingStates.uploadingImage ? (
+                  <>
+                    <LoadingSpinner size="sm" className="mr-2" />
+                    {loadingStates.uploadingImage ? 'Uploading...' : 'Saving...'}
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => setIsEditDialogOpen(false)} 
+                className="flex-1"
+                disabled={loadingStates.editing || loadingStates.uploadingImage}
+              >
                 Cancel
               </Button>
             </div>

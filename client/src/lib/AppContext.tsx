@@ -1,15 +1,26 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { User, FoodLog, InventoryItem, Resource } from './data';
 import { api } from './apiClient';
 import { toast } from 'sonner';
+
+interface ResourcesPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
 
 interface AppContextType {
   currentUser: User | null;
   users: User[];
   foodLogs: FoodLog[];
   inventory: InventoryItem[];
+  resources: Resource[];
+  resourcesPagination: ResourcesPagination | null;
   categories: string[];
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
@@ -27,6 +38,7 @@ interface AppContextType {
   deleteCategory: (category: string) => void;
   fetchInventory: () => Promise<void>;
   fetchFoodLogs: () => Promise<void>;
+  fetchResources: (page?: number, limit?: number, category?: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -48,51 +60,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
+  const [resourcesPagination, setResourcesPagination] = useState<ResourcesPagination | null>(null);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<string[]>([
     'dairy', 'grain', 'fruit', 'vegetable', 'protein', 'oil'
   ]);
-
-  // Load user from localStorage on mount and validate with backend
-  useEffect(() => {
-    const validateUser = async () => {
-      const savedUser = localStorage.getItem('currentUser');
-      const token = localStorage.getItem('authToken');
-      
-      if (savedUser && token) {
-        try {
-          // Validate token with backend
-          const { data } = await api.get('/auth/me');
-          const user: User = {
-            id: data.data.id,
-            name: data.data.name,
-            email: data.data.email,
-            householdSize: data.data.householdSize,
-            dietaryPreferences: data.data.dietaryPreferences,
-            location: {
-              district: data.data.district || '',
-              division: data.data.division || ''
-            },
-            onboardingCompleted: data.data.onboardingCompleted
-          };
-          setCurrentUser(user);
-          localStorage.setItem('currentUser', JSON.stringify(user));
-          
-          // Fetch user's data from backend
-          await fetchInventory();
-          await fetchFoodLogs();
-        } catch (error) {
-          // Token is invalid, clear everything
-          console.log('Invalid token, clearing localStorage');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('currentUser');
-          setCurrentUser(null);
-        }
-      }
-    };
-    
-    validateUser();
-  }, []);
 
   // Fetch inventory from backend
   const fetchInventory = async () => {
@@ -113,6 +86,92 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       console.error('Failed to fetch food logs:', error);
     }
   };
+
+  // Fetch resources from backend with pagination
+  const fetchResources = useCallback(async (page: number = 1, limit: number = 9, category?: string) => {
+    try {
+      console.log('Fetching resources from API...', { page, limit, category });
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: limit.toString(),
+      });
+      if (category && category !== 'all') {
+        params.append('category', category);
+      }
+      
+      const { data } = await api.get(`/resources?${params.toString()}`);
+      console.log('Resources fetched:', data);
+      if (data && data.data) {
+        setResources(data.data);
+        if (data.pagination) {
+          setResourcesPagination(data.pagination);
+        }
+        console.log(`Successfully loaded ${data.data.length} resources`);
+      } else {
+        console.warn('Resources data structure unexpected:', data);
+        setResources([]);
+        setResourcesPagination(null);
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch resources:', error);
+      console.error('Error details:', error.response?.data || error.message);
+      setResources([]);
+      setResourcesPagination(null);
+    }
+  }, []);
+
+  // Load user from localStorage on mount and validate with backend
+  useEffect(() => {
+    const validateUser = async () => {
+      const savedUser = localStorage.getItem('currentUser');
+      const token = localStorage.getItem('authToken');
+      
+      if (savedUser && token) {
+        try {
+          // Validate token with backend
+          const { data } = await api.get('/auth/me');
+          const user: User = {
+            id: data.data.id,
+            name: data.data.name,
+            email: data.data.email,
+            householdSize: data.data.householdSize,
+            dietaryPreferences: data.data.dietaryPreferences || [],
+            budgetPreference: data.data.budgetPreference,
+            monthlyBudget: data.data.monthlyBudget,
+            location: {
+              district: data.data.district || '',
+              division: data.data.division || ''
+            },
+            imageUrl: data.data.imageUrl,
+            familyMembers: data.data.familyMembers?.map((fm: any) => ({
+              id: fm.id,
+              name: fm.name,
+              age: fm.age,
+              gender: fm.gender,
+              healthConditions: fm.healthConditions || [],
+              imageUrl: fm.imageUrl
+            })) || [],
+            onboardingCompleted: data.data.onboardingCompleted
+          };
+          setCurrentUser(user);
+          localStorage.setItem('currentUser', JSON.stringify(user));
+          
+          // Fetch user's data from backend
+          await fetchInventory();
+          await fetchFoodLogs();
+          await fetchResources();
+        } catch (error) {
+          // Token is invalid, clear everything
+          console.log('Invalid token, clearing localStorage');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('currentUser');
+          setCurrentUser(null);
+        }
+      }
+    };
+    
+    validateUser();
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -139,6 +198,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       // Fetch user's data
       await fetchInventory();
       await fetchFoodLogs();
+      await fetchResources();
       
       toast.success('Login successful!');
       return true;
@@ -194,6 +254,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setCurrentUser(null);
     setInventory([]);
     setFoodLogs([]);
+    setResources([]);
+    setResourcesPagination(null);
     localStorage.removeItem('authToken');
     localStorage.removeItem('currentUser');
     toast.success('Logged out successfully');
@@ -207,25 +269,52 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         name: updates.name,
         householdSize: updates.householdSize,
         dietaryPreferences: updates.dietaryPreferences,
+        budgetPreference: updates.budgetPreference,
+        monthlyBudget: updates.monthlyBudget,
         district: updates.location?.district,
         division: updates.location?.division,
+        imageUrl: updates.imageUrl,
+        familyMembers: updates.familyMembers,
         onboardingCompleted: updates.onboardingCompleted
       });
       
       const updatedUser: User = {
         ...currentUser,
-        ...data.data,
+        name: data.data.name || currentUser.name,
+        email: data.data.email || currentUser.email,
+        householdSize: data.data.householdSize || currentUser.householdSize,
+        dietaryPreferences: data.data.dietaryPreferences || currentUser.dietaryPreferences || [],
+        budgetPreference: data.data.budgetPreference || currentUser.budgetPreference,
+        monthlyBudget: data.data.monthlyBudget !== undefined ? data.data.monthlyBudget : currentUser.monthlyBudget,
         location: {
-          district: data.data.district || '',
-          division: data.data.division || ''
-        }
+          district: data.data.district || currentUser.location.district || '',
+          division: data.data.division || currentUser.location.division || ''
+        },
+        imageUrl: data.data.imageUrl || currentUser.imageUrl,
+        familyMembers: data.data.familyMembers?.map((fm: any) => ({
+          id: fm.id,
+          name: fm.name,
+          age: fm.age,
+          gender: fm.gender,
+          healthConditions: fm.healthConditions || [],
+          imageUrl: fm.imageUrl
+        })) || currentUser.familyMembers || [],
+        onboardingCompleted: data.data.onboardingCompleted !== undefined ? data.data.onboardingCompleted : currentUser.onboardingCompleted
       };
       
       setCurrentUser(updatedUser);
       localStorage.setItem('currentUser', JSON.stringify(updatedUser));
       toast.success('Profile updated successfully');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to update profile');
+      // If backend doesn't support new fields, update locally
+      const updatedUser: User = {
+        ...currentUser,
+        ...updates,
+        location: updates.location || currentUser.location
+      };
+      setCurrentUser(updatedUser);
+      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+      toast.success('Profile updated successfully (local only)');
     }
   };
 
@@ -339,6 +428,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setCategories(categories.filter(c => c !== category));
   };
 
+  // Fetch resources on mount (resources are public, no auth needed)
+  useEffect(() => {
+    fetchResources();
+  }, [fetchResources]);
+
   return (
     <AppContext.Provider
       value={{
@@ -346,6 +440,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         users,
         foodLogs,
         inventory,
+        resources,
+        resourcesPagination,
         categories,
         loading,
         login,
@@ -363,6 +459,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         deleteCategory,
         fetchInventory,
         fetchFoodLogs,
+        fetchResources,
       }}
     >
       {children}

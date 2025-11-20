@@ -17,16 +17,35 @@ model User {
   name                String
   householdSize       Int      @default(1)
   dietaryPreferences  String[] // Array of dietary preferences
+  budgetPreference    String?  // low, medium, high, premium
+  monthlyBudget       Float?
   district            String?
   division            String?
+  imageUrl            String?
   onboardingCompleted Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
   inventory InventoryItem[]
   foodLogs  FoodLog[]
+  familyMembers FamilyMember[]
 
   @@index([email])
+}
+
+model FamilyMember {
+  id              String   @id @default(cuid())
+  name            String
+  age             Int?
+  gender          String?  // male, female, other, prefer-not-to-say
+  healthConditions String[] // Array of health conditions
+  imageUrl        String?
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
 }
 
 model InventoryItem {
@@ -65,8 +84,8 @@ model Resource {
   id          String   @id @default(cuid())
   title       String
   description String
-  category    String // sustainability, education, nutrition
-  type        String // article, video
+  category    String // Waste Reduction, Meal Planning, Nutrition Tips, Budget Meal Tips, Recipes
+  type        String // article, video, youtube, pdf, blog
   url         String?
   createdAt   DateTime @default(now())
 

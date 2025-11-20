@@ -73,7 +73,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentView, onNavigate }) => {
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => onNavigate('profile')} className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
-              <span>Settings</span>
+              <span>Profile</span>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout} className="cursor-pointer text-primary">

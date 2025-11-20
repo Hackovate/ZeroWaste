@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Home, FileText, Package, BookOpen, User, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, FileText, Package, BookOpen, Globe, Camera, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from './ui/utils';
 
@@ -16,8 +16,9 @@ const navItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
   { id: 'logs', label: 'Food Logs', icon: FileText },
   { id: 'inventory', label: 'Inventory', icon: Package },
+  { id: 'scanning', label: 'Food Scanner', icon: Camera },
   { id: 'resources', label: 'Resources', icon: BookOpen },
-  { id: 'profile', label: 'Profile', icon: User },
+  { id: 'community', label: 'Community', icon: Globe },
 ];
 
 export const AppSidebar: React.FC<AppSidebarProps> = ({

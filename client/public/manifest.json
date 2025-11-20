@@ -1,0 +1,49 @@
+{
+  "name": "ZeroWaste - Food Waste Management",
+  "short_name": "ZeroWaste",
+  "description": "Track food inventory, log consumption, and reduce food waste",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#F55951",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/assets/ZeroWaste-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/ZeroWaste-icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/assets/ZeroWaste-icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["food", "lifestyle", "productivity"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Add Inventory",
+      "short_name": "Inventory",
+      "description": "Add items to your inventory",
+      "url": "/?view=inventory",
+      "icons": [{ "src": "/assets/ZeroWaste-icon.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "Food Logs",
+      "short_name": "Logs",
+      "description": "View your food consumption logs",
+      "url": "/?view=logs",
+      "icons": [{ "src": "/assets/ZeroWaste-icon.svg", "sizes": "96x96" }]
+    }
+  ]
+}
+

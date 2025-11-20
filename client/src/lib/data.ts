@@ -30,8 +30,9 @@ export interface Resource {
   title: string;
   description: string;
   category: string;
-  type: 'article' | 'video';
+  type: 'article' | 'video' | 'youtube' | 'pdf' | 'blog';
   url?: string;
+  createdAt?: string;
 }
 
 export interface User {
@@ -40,12 +41,35 @@ export interface User {
   email: string;
   householdSize: number;
   dietaryPreferences: string[];
+  budgetPreference?: 'low' | 'medium' | 'high' | 'premium';
+  monthlyBudget?: number;
   location: {
     district: string;
     division: string;
   };
+  imageUrl?: string;
+  familyMembers?: Array<{
+    id: string;
+    name: string;
+    age?: number;
+    gender?: 'male' | 'female' | 'other' | 'prefer-not-to-say';
+    healthConditions?: string[];
+    imageUrl?: string;
+  }>;
   onboardingCompleted?: boolean;
 }
+
+export const HEALTH_CONDITIONS = [
+  'Allergy',
+  'Asthma',
+  'High Blood Pressure',
+  'Diabetes',
+  'Heart Disease',
+  'Kidney Disease',
+  'Lactose Intolerance',
+  'Gluten Intolerance',
+  'Other'
+];
 
 export const FOOD_DATABASE: FoodItem[] = [
   { id: '1', name: 'Milk', category: 'dairy', expirationEstimate: 7, price: 99 },

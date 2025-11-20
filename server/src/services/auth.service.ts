@@ -89,11 +89,24 @@ export const authService = {
         name: true,
         householdSize: true,
         dietaryPreferences: true,
+        budgetPreference: true,
+        monthlyBudget: true,
         district: true,
         division: true,
+        imageUrl: true,
         onboardingCompleted: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        familyMembers: {
+          select: {
+            id: true,
+            name: true,
+            age: true,
+            gender: true,
+            healthConditions: true,
+            imageUrl: true
+          }
+        }
       }
     });
 
@@ -108,19 +121,35 @@ export const authService = {
     name: string;
     householdSize: number;
     dietaryPreferences: string[];
+    budgetPreference: string;
+    monthlyBudget: number;
     district: string;
     division: string;
+    imageUrl: string;
     onboardingCompleted: boolean;
+    familyMembers?: Array<{
+      id?: string;
+      name: string;
+      age?: number;
+      gender?: string;
+      healthConditions?: string[];
+      imageUrl?: string;
+    }>;
   }>) {
+    const { familyMembers, ...userData } = data;
+
+    // Update user data
     const user = await prisma.user.update({
       where: { id: userId },
-      data,
+      data: userData,
       select: {
         id: true,
         email: true,
         name: true,
         householdSize: true,
         dietaryPreferences: true,
+        budgetPreference: true,
+        monthlyBudget: true,
         district: true,
         division: true,
         onboardingCompleted: true,
@@ -128,6 +157,57 @@ export const authService = {
       }
     });
 
-    return user;
+    // Handle family members if provided
+    if (familyMembers !== undefined) {
+      // Delete existing family members
+      await prisma.familyMember.deleteMany({
+        where: { userId }
+      });
+
+      // Create new family members
+      if (familyMembers.length > 0) {
+        await prisma.familyMember.createMany({
+          data: familyMembers.map(member => ({
+            name: member.name,
+            age: member.age,
+            gender: member.gender,
+            healthConditions: member.healthConditions || [],
+            imageUrl: member.imageUrl,
+            userId
+          }))
+        });
+      }
+    }
+
+    // Fetch updated user with family members
+    const updatedUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        householdSize: true,
+        dietaryPreferences: true,
+        budgetPreference: true,
+        monthlyBudget: true,
+        district: true,
+        division: true,
+        imageUrl: true,
+        onboardingCompleted: true,
+        updatedAt: true,
+        familyMembers: {
+          select: {
+            id: true,
+            name: true,
+            age: true,
+            gender: true,
+            healthConditions: true,
+            imageUrl: true
+          }
+        }
+      }
+    });
+
+    return updatedUser;
   }
 };

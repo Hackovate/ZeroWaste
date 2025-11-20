@@ -1,41 +1,150 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { RESOURCES } from '../lib/data';
-import { BookOpen, Search, ExternalLink, Video, FileText } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from './ui/pagination';
+import { useApp } from '../lib/AppContext';
+import { BookOpen, Search, ExternalLink, Video, FileText, Youtube, File, Rss } from 'lucide-react';
+
+const RESOURCES_PER_PAGE = 9;
+const CATEGORIES = ['waste reduction', 'meal planning', 'nutrition tips', 'budget meal tips', 'recipes'];
 
 export const Resources: React.FC = () => {
+  const { resources, resourcesPagination, loading, fetchResources } = useApp();
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [activeTab, setActiveTab] = useState('all');
 
-  const categories = [...new Set(RESOURCES.map(r => r.category))];
-  const types = [...new Set(RESOURCES.map(r => r.type))];
+  // Fetch resources when page or category changes
+  useEffect(() => {
+    const category = activeTab !== 'all' ? activeTab : categoryFilter !== 'all' ? categoryFilter : undefined;
+    fetchResources(currentPage, RESOURCES_PER_PAGE, category);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, activeTab, categoryFilter]);
 
-  const filteredResources = RESOURCES.filter(resource => {
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, categoryFilter]);
+
+  const types = [...new Set(resources.map(r => r.type))];
+
+  // Client-side filtering for search and type (since these are quick filters)
+  const filteredResources = resources.filter(resource => {
     const matchesSearch = 
       resource.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       resource.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'all' || resource.category === categoryFilter;
     const matchesType = typeFilter === 'all' || resource.type === typeFilter;
     
-    return matchesSearch && matchesCategory && matchesType;
+    return matchesSearch && matchesType;
   });
 
-  const resourcesByCategory = categories.reduce((acc, category) => {
-    acc[category] = filteredResources.filter(r => r.category === category);
-    return acc;
-  }, {} as Record<string, typeof RESOURCES>);
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const renderPagination = () => {
+    if (!resourcesPagination || resourcesPagination.totalPages <= 1) return null;
+
+    const { page, totalPages, hasNextPage, hasPreviousPage } = resourcesPagination;
+    const pages: (number | string)[] = [];
+    
+    // Generate page numbers
+    if (totalPages <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first page, ellipsis, current range, ellipsis, last page
+      pages.push(1);
+      if (page > 3) pages.push('ellipsis-start');
+      
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (page < totalPages - 2) pages.push('ellipsis-end');
+      pages.push(totalPages);
+    }
+
+    return (
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (hasPreviousPage) handlePageChange(page - 1);
+              }}
+              className={!hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+          
+          {pages.map((p, idx) => {
+            if (p === 'ellipsis-start' || p === 'ellipsis-end') {
+              return (
+                <PaginationItem key={`ellipsis-${idx}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              );
+            }
+            const pageNum = p as number;
+            return (
+              <PaginationItem key={pageNum}>
+                <PaginationLink
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(pageNum);
+                  }}
+                  isActive={pageNum === page}
+                  className="cursor-pointer"
+                >
+                  {pageNum}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          })}
+          
+          <PaginationItem>
+            <PaginationNext
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (hasNextPage) handlePageChange(page + 1);
+              }}
+              className={!hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
+  };
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       <div>
         <h1>Resources</h1>
         <p className="text-[var(--color-700)] mt-1">
-          Sustainability tips, nutrition guides, and educational content
+          Waste reduction tips, nutrition guides, budget meal ideas, meal planning strategies, and recipes
         </p>
       </div>
 
@@ -57,7 +166,7 @@ export const Resources: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Categories</SelectItem>
-                {categories.map(cat => (
+                {CATEGORIES.map(cat => (
                   <SelectItem key={cat} value={cat} className="capitalize">
                     {cat}
                   </SelectItem>
@@ -81,20 +190,26 @@ export const Resources: React.FC = () => {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="all" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList>
-          <TabsTrigger value="all">All ({filteredResources.length})</TabsTrigger>
-          {categories.map(cat => (
+          <TabsTrigger value="all">All {resourcesPagination ? `(${resourcesPagination.total})` : ''}</TabsTrigger>
+          {CATEGORIES.map(cat => (
             <TabsTrigger key={cat} value={cat} className="capitalize">
-              {cat} ({resourcesByCategory[cat]?.length || 0})
+              {cat}
             </TabsTrigger>
           ))}
         </TabsList>
 
         <TabsContent value="all" className="mt-6">
-          {filteredResources.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {filteredResources.map(resource => (
+          {loading ? (
+            <div className="text-center py-12">
+              <BookOpen className="w-16 h-16 text-[var(--color-300)] mx-auto mb-4 animate-pulse" />
+              <h3>Loading resources...</h3>
+            </div>
+          ) : filteredResources.length > 0 ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {filteredResources.map(resource => (
                 <Card key={resource.id} className="hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex items-start justify-between gap-2">
@@ -104,8 +219,16 @@ export const Resources: React.FC = () => {
                           {resource.description}
                         </CardDescription>
                       </div>
-                      {resource.type === 'video' ? (
-                        <Video className="w-5 h-5 text-primary flex-shrink-0" />
+                      {resource.type === 'video' || resource.type === 'youtube' ? (
+                        resource.type === 'youtube' ? (
+                          <Youtube className="w-5 h-5 text-primary flex-shrink-0" />
+                        ) : (
+                          <Video className="w-5 h-5 text-primary flex-shrink-0" />
+                        )
+                      ) : resource.type === 'pdf' ? (
+                        <File className="w-5 h-5 text-primary flex-shrink-0" />
+                      ) : resource.type === 'blog' ? (
+                        <Rss className="w-5 h-5 text-primary flex-shrink-0" />
                       ) : (
                         <FileText className="w-5 h-5 text-primary flex-shrink-0" />
                       )}
@@ -129,7 +252,9 @@ export const Resources: React.FC = () => {
                   </CardContent>
                 </Card>
               ))}
-            </div>
+              </div>
+              {renderPagination()}
+            </>
           ) : (
             <div className="text-center py-12">
               <BookOpen className="w-16 h-16 text-[var(--color-300)] mx-auto mb-4" />
@@ -141,11 +266,12 @@ export const Resources: React.FC = () => {
           )}
         </TabsContent>
 
-        {categories.map(category => (
+        {CATEGORIES.map(category => (
           <TabsContent key={category} value={category} className="mt-6">
-            {resourcesByCategory[category]?.length > 0 ? (
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {resourcesByCategory[category].map(resource => (
+            {filteredResources.length > 0 ? (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredResources.map(resource => (
                   <Card key={resource.id} className="hover:shadow-md transition-shadow">
                     <CardHeader>
                       <div className="flex items-start justify-between gap-2">
@@ -155,8 +281,16 @@ export const Resources: React.FC = () => {
                             {resource.description}
                           </CardDescription>
                         </div>
-                        {resource.type === 'video' ? (
-                          <Video className="w-5 h-5 text-primary flex-shrink-0" />
+                        {resource.type === 'video' || resource.type === 'youtube' ? (
+                          resource.type === 'youtube' ? (
+                            <Youtube className="w-5 h-5 text-primary flex-shrink-0" />
+                          ) : (
+                            <Video className="w-5 h-5 text-primary flex-shrink-0" />
+                          )
+                        ) : resource.type === 'pdf' ? (
+                          <File className="w-5 h-5 text-primary flex-shrink-0" />
+                        ) : resource.type === 'blog' ? (
+                          <Rss className="w-5 h-5 text-primary flex-shrink-0" />
                         ) : (
                           <FileText className="w-5 h-5 text-primary flex-shrink-0" />
                         )}
@@ -180,7 +314,9 @@ export const Resources: React.FC = () => {
                     </CardContent>
                   </Card>
                 ))}
-              </div>
+                </div>
+                {renderPagination()}
+              </>
             ) : (
               <div className="text-center py-12">
                 <BookOpen className="w-16 h-16 text-[var(--color-300)] mx-auto mb-4" />
@@ -202,25 +338,25 @@ export const Resources: React.FC = () => {
           <div className="grid gap-4 sm:grid-cols-4">
             <div className="text-center p-4 bg-[var(--color-300)]/30 rounded-lg">
               <p className="text-2xl font-semibold text-primary">
-                {RESOURCES.length}
+                {resourcesPagination?.total || resources.length}
               </p>
               <p className="text-sm text-[var(--color-700)] mt-1">Total Resources</p>
             </div>
             <div className="text-center p-4 bg-[var(--color-300)]/30 rounded-lg">
               <p className="text-2xl font-semibold text-primary">
-                {RESOURCES.filter(r => r.type === 'article').length}
+                {resources.filter(r => r.type === 'article').length}
               </p>
               <p className="text-sm text-[var(--color-700)] mt-1">Articles</p>
             </div>
             <div className="text-center p-4 bg-[var(--color-300)]/30 rounded-lg">
               <p className="text-2xl font-semibold text-primary">
-                {RESOURCES.filter(r => r.type === 'video').length}
+                {resources.filter(r => r.type === 'video' || r.type === 'youtube').length}
               </p>
               <p className="text-sm text-[var(--color-700)] mt-1">Videos</p>
             </div>
             <div className="text-center p-4 bg-[var(--color-300)]/30 rounded-lg">
               <p className="text-2xl font-semibold text-primary">
-                {categories.length}
+                {CATEGORIES.length}
               </p>
               <p className="text-sm text-[var(--color-700)] mt-1">Categories</p>
             </div>
