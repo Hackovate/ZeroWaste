@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String   @id @default(cuid())
+  email               String   @unique
+  passwordHash        String
+  name                String
+  householdSize       Int      @default(1)
+  dietaryPreferences  String[] // Array of dietary preferences
+  district            String?
+  division            String?
+  onboardingCompleted Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  inventory InventoryItem[]
+  foodLogs  FoodLog[]
+
+  @@index([email])
+}
+
+model InventoryItem {
+  id                 String   @id @default(cuid())
+  name               String
+  category           String // dairy, grain, fruit, vegetable, protein, oil
+  quantity           Float
+  unit               String // kg, gm, ltr, pcs
+  expirationEstimate Int // days
+  price              Float?
+  imageUrl           String?
+  dateAdded          DateTime @default(now())
+  userId             String
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([category])
+}
+
+model FoodLog {
+  id       String   @id @default(cuid())
+  itemName String
+  quantity Float
+  unit     String // kg, gm, ltr, pcs
+  category String
+  date     DateTime @default(now())
+  imageUrl String?
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([date])
+}
+
+model Resource {
+  id          String   @id @default(cuid())
+  title       String
+  description String
+  category    String // sustainability, education, nutrition
+  type        String // article, video
+  url         String?
+  createdAt   DateTime @default(now())
+
+  @@index([category])
+}
