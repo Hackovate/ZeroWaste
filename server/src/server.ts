@@ -19,6 +19,7 @@ import resourceRoutes from './routes/resource.routes';
 import foodDatabaseRoutes from './routes/foodDatabase.routes';
 import categoryRoutes from './routes/category.routes';
 import adminRoutes from './routes/admin.routes';
+import communityRoutes from './routes/community.routes';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -60,6 +61,7 @@ app.use('/api/resources', resourceRoutes);
 app.use('/api/food-database', foodDatabaseRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/community', communityRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

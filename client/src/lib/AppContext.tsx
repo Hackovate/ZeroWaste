@@ -1,7 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User, FoodLog, InventoryItem, Resource, FoodItem } from './data';
+import { User, FoodLog, InventoryItem, Resource, FoodItem, HelpRequest, Donation } from './data';
 import { api } from './apiClient';
 import { toast } from 'sonner';
 
@@ -23,6 +23,15 @@ interface InventoryPagination {
   hasPreviousPage: boolean;
 }
 
+interface HelpRequestsPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
 interface AppContextType {
   currentUser: User | null;
   users: User[];
@@ -32,6 +41,8 @@ interface AppContextType {
   foodDatabase: FoodItem[];
   resources: Resource[];
   resourcesPagination: ResourcesPagination | null;
+  helpRequests: HelpRequest[];
+  helpRequestsPagination: HelpRequestsPagination | null;
   categories: string[];
   loading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
@@ -56,6 +67,12 @@ interface AppContextType {
   fetchFoodDatabase: () => Promise<void>;
   fetchFoodLogs: () => Promise<void>;
   fetchResources: (page?: number, limit?: number, category?: string) => Promise<void>;
+  fetchHelpRequests: (filters?: { district?: string; division?: string; category?: string; status?: string; sortBy?: string; page?: number; limit?: number }) => Promise<void>;
+  createHelpRequest: (data: Omit<HelpRequest, 'id' | 'createdAt' | 'userId' | 'status'>) => Promise<void>;
+  updateHelpRequest: (id: string, data: Partial<HelpRequest>) => Promise<void>;
+  deleteHelpRequest: (id: string) => Promise<void>;
+  createDonation: (data: Omit<Donation, 'id' | 'createdAt' | 'donorUserId'>) => Promise<void>;
+  reportHelpRequest: (helpRequestId: string, type: 'fraud' | 'trusted', reason?: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -81,6 +98,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [foodDatabase, setFoodDatabase] = useState<FoodItem[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [resourcesPagination, setResourcesPagination] = useState<ResourcesPagination | null>(null);
+  const [helpRequests, setHelpRequests] = useState<HelpRequest[]>([]);
+  const [helpRequestsPagination, setHelpRequestsPagination] = useState<HelpRequestsPagination | null>(null);
   const [loading, setLoading] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
 
@@ -629,6 +648,100 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
+  // Community / Help Request methods
+  const fetchHelpRequests = useCallback(async (filters?: {
+    district?: string;
+    division?: string;
+    category?: string;
+    status?: string;
+    sortBy?: string;
+    page?: number;
+    limit?: number;
+  }) => {
+    try {
+      const params = new URLSearchParams();
+      if (filters?.district) params.append('district', filters.district);
+      if (filters?.division) params.append('division', filters.division);
+      if (filters?.category && filters.category !== 'all') params.append('category', filters.category);
+      if (filters?.status && filters.status !== 'all') params.append('status', filters.status);
+      if (filters?.sortBy) params.append('sortBy', filters.sortBy);
+      params.append('page', (filters?.page || 1).toString());
+      params.append('limit', (filters?.limit || 20).toString());
+
+      const { data } = await api.get(`/community?${params.toString()}`);
+      setHelpRequests(data.data);
+      if (data.pagination) {
+        setHelpRequestsPagination(data.pagination);
+      }
+    } catch (error: any) {
+      console.error('Failed to fetch help requests:', error);
+      setHelpRequests([]);
+      setHelpRequestsPagination(null);
+    }
+  }, []);
+
+  const createHelpRequest = async (requestData: Omit<HelpRequest, 'id' | 'createdAt' | 'userId' | 'status'>): Promise<void> => {
+    try {
+      console.log('Creating help request with data:', requestData);
+      await api.post('/community', requestData);
+      await fetchHelpRequests(); // Refresh list
+      toast.success('Help request created successfully!');
+    } catch (error: any) {
+      console.error('Create help request error:', error.response?.data);
+      const errorMsg = error.response?.data?.errors?.[0]?.message || error.response?.data?.error || 'Failed to create help request';
+      toast.error(errorMsg);
+      throw error;
+    }
+  };
+
+  const updateHelpRequest = async (id: string, updates: Partial<HelpRequest>): Promise<void> => {
+    try {
+      await api.put(`/community/${id}`, updates);
+      await fetchHelpRequests(); // Refresh list
+      toast.success('Help request updated successfully!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update help request');
+      throw error;
+    }
+  };
+
+  const deleteHelpRequest = async (id: string): Promise<void> => {
+    try {
+      await api.delete(`/community/${id}`);
+      await fetchHelpRequests(); // Refresh list
+      toast.success('Help request deleted successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to delete help request');
+      throw error;
+    }
+  };
+
+  const createDonation = async (donationData: Omit<Donation, 'id' | 'createdAt' | 'donorUserId'>): Promise<void> => {
+    try {
+      await api.post('/community/donate', donationData);
+      await fetchHelpRequests(); // Refresh to show updated donation count
+      toast.success('Thank you for your donation offer!');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to submit donation');
+      throw error;
+    }
+  };
+
+  const reportHelpRequest = async (helpRequestId: string, type: 'fraud' | 'trusted', reason?: string): Promise<void> => {
+    try {
+      await api.post('/community/report', {
+        helpRequestId,
+        type,
+        reason
+      });
+      await fetchHelpRequests(); // Refresh to show updated report count
+      toast.success(`Help request marked as ${type}`);
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to submit report');
+      throw error;
+    }
+  };
+
   // Fetch resources and categories on mount (public data, no auth needed)
   useEffect(() => {
     fetchResources();
@@ -646,6 +759,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         foodDatabase,
         resources,
         resourcesPagination,
+        helpRequests,
+        helpRequestsPagination,
         categories,
         loading,
         login,
@@ -670,6 +785,12 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         fetchFoodDatabase,
         fetchFoodLogs,
         fetchResources,
+        fetchHelpRequests,
+        createHelpRequest,
+        updateHelpRequest,
+        deleteHelpRequest,
+        createDonation,
+        reportHelpRequest,
       }}
     >
       {children}

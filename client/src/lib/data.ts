@@ -62,6 +62,53 @@ export interface User {
   onboardingCompleted?: boolean;
 }
 
+export interface HelpRequest {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  quantity?: number;
+  unit?: 'kg' | 'gm' | 'ltr' | 'pcs';
+  district: string;
+  division: string;
+  contactName: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  neededBy: string;
+  status: 'open' | 'fulfilled' | 'closed';
+  createdAt: string;
+  userId: string;
+  user?: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  };
+  donations?: Donation[];
+  fraudReports?: number;
+  trustedReports?: number;
+  _count?: {
+    fraudReports: number;
+    trustedReports: number;
+  };
+}
+
+export interface Donation {
+  id: string;
+  helpRequestId: string;
+  donorUserId: string;
+  message?: string;
+  quantity?: number;
+  unit?: string;
+  contactInfo?: string;
+  anonymous: boolean;
+  createdAt: string;
+  donor?: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  };
+}
+
 export const HEALTH_CONDITIONS = [
   'Allergy',
   'Asthma',

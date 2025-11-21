@@ -3,6 +3,7 @@ import argon2 from 'argon2';
 import { seedResources } from '../src/utils/seedResources';
 import { seedCategories } from '../src/utils/seedCategories';
 import { seedFoodDatabase } from '../src/utils/seedFoodDatabase';
+import { seedHelpRequests } from '../src/utils/seedHelpRequests';
 
 const prisma = new PrismaClient();
 
@@ -50,6 +51,9 @@ async function main() {
 
   // Seed food database (idempotent - only seeds if empty)
   await seedFoodDatabase();
+
+  // Seed help requests (idempotent - only seeds if empty)
+  await seedHelpRequests();
 
   console.log('Database seeding completed!');
 }
