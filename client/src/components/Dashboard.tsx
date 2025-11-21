@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { RESOURCES, FOOD_CATEGORIES } from '../lib/data';
-import { Package, FileText, BookOpen, TrendingUp, AlertCircle } from 'lucide-react';
+import { Package, FileText, BookOpen, TrendingUp, AlertCircle, TrendingDown } from 'lucide-react';
 
 interface DashboardProps {
   onNavigate: (view: string) => void;
@@ -57,6 +57,11 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
     return item.expirationEstimate <= 7 && daysInInventory >= Math.floor(item.expirationEstimate * 0.7);
   });
 
+  const lowStockItems = inventory
+    .filter(item => typeof item.quantity === 'number' && item.quantity <= 1)
+    .sort((a, b) => (a.quantity || 0) - (b.quantity || 0))
+    .slice(0, 4);
+
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
       <div>
@@ -108,29 +113,79 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate }) => {
         </Card>
       </div>
 
-      {/* Expiring Items Alert */}
-      {expiringItems.length > 0 && (
-        <Card className="border-destructive/50 bg-destructive/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 text-destructive" />
-              Items Expiring Soon
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {expiringItems.map(item => (
-                <div key={item.id} className="flex justify-between items-center">
-                  <span>{item.name}</span>
-                  <Badge variant="destructive">{item.expirationEstimate} days shelf life</Badge>
+      {(expiringItems.length > 0 || lowStockItems.length > 0) && (
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card className="border-primary/30 bg-primary/5">
+            <CardHeader className="flex flex-wrap items-center justify-between gap-2 pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <AlertCircle className="w-4 h-4 text-primary" />
+                {expiringItems.length > 0
+                  ? `${expiringItems.length} item${expiringItems.length > 1 ? 's' : ''} expiring soon`
+                  : 'No items expiring soon'}
+              </CardTitle>
+              <Button
+                onClick={() => onNavigate('inventory')}
+                variant="ghost"
+                size="sm"
+                className="text-primary hover:text-primary"
+              >
+                View inventory
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {expiringItems.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {expiringItems.map(item => (
+                    <div
+                      key={item.id}
+                      className="flex items-center gap-2 rounded-full bg-white/80 px-3 py-1 text-sm shadow-sm"
+                    >
+                      <span className="font-medium">{item.name}</span>
+                      <Badge variant="destructive" className="text-xs">
+                        {item.expirationEstimate}d left
+                      </Badge>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-            <Button onClick={() => onNavigate('inventory')} variant="outline" className="mt-4 w-full">
-              View Inventory
-            </Button>
-          </CardContent>
-        </Card>
+              ) : (
+                <p className="text-sm text-[var(--color-700)]">Everything looks fresh!</p>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="border-[var(--color-300)]/60 bg-[var(--color-300)]/20">
+            <CardHeader className="flex flex-wrap items-center justify-between gap-2 pb-3">
+              <CardTitle className="flex items-center gap-2 text-sm font-semibold">
+                <TrendingDown className="w-4 h-4 text-[var(--color-700)]" />
+                {lowStockItems.length > 0 ? 'Low stock alerts' : 'Stock levels healthy'}
+              </CardTitle>
+              <Button
+                onClick={() => onNavigate('inventory')}
+                variant="ghost"
+                size="sm"
+                className="text-[var(--color-700)] hover:text-primary"
+              >
+                Review items
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-0">
+              {lowStockItems.length > 0 ? (
+                <div className="space-y-2">
+                  {lowStockItems.map(item => (
+                    <div key={item.id} className="flex items-center justify-between rounded-lg bg-white px-3 py-2 text-sm shadow-sm">
+                      <div className="font-medium truncate">{item.name}</div>
+                      <Badge variant="outline" className="text-xs">
+                        {item.quantity} {item.unit}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-[var(--color-700)]">Add more items to trigger alerts.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       )}
 
       <div className="grid gap-6 lg:grid-cols-2">
