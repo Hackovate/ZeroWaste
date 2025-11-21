@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    // Force restart
-    reactStrictMode: true,
+    // Disable StrictMode in development to prevent Leaflet map initialization issues
+    // StrictMode intentionally double-mounts components which conflicts with Leaflet
+    reactStrictMode: false,
     images: {
         remotePatterns: [
             {

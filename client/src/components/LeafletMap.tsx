@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { Badge } from '@/components/ui/badge';
@@ -50,12 +50,33 @@ interface LeafletMapProps {
 }
 
 const LeafletMap: React.FC<LeafletMapProps> = ({ requests, onSelectRequest, getCategoryColor }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  const [mapKey, setMapKey] = useState(0);
+  const containerIdRef = useRef(`map-${Date.now()}`);
+
+  // Only render map after component is mounted (client-side only)
+  useEffect(() => {
+    setIsMounted(true);
+    
+    // Force re-render with new key to handle StrictMode double-mounting
+    setMapKey(prev => prev + 1);
+  }, []);
+
+  if (!isMounted) {
+    return (
+      <div style={{ height: '600px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p>Loading map...</p>
+      </div>
+    );
+  }
+
   return (
-    <div style={{ height: '600px', width: '100%' }}>
+    <div id={containerIdRef.current} key={mapKey} style={{ height: '600px', width: '100%' }}>
       <MapContainer 
         center={[defaultCenter.lat, defaultCenter.lng]} 
         zoom={7} 
         style={{ height: '100%', width: '100%' }}
+        scrollWheelZoom={true}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

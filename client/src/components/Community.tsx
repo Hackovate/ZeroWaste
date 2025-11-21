@@ -634,6 +634,7 @@ export const Community: React.FC = () => {
               {viewMode === 'map' && (
                 <Card className="h-[600px] relative overflow-hidden z-0">
                   <LeafletMap 
+                    key={`community-map-${showMatching ? 'matching' : 'all'}`}
                     requests={showMatching ? getMatchedRequests() : helpRequests}
                     onSelectRequest={setSelectedRequest}
                     getCategoryColor={getCategoryColor}
