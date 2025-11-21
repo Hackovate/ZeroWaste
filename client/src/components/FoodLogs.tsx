@@ -236,7 +236,7 @@ export const FoodLogs: React.FC = () => {
                         value={itemSearchQuery}
                         onValueChange={setItemSearchQuery}
                       />
-                      <CommandList>
+                      <CommandList className="max-h-[240px] overflow-y-auto">
                         <CommandEmpty>No inventory items found.</CommandEmpty>
                         <CommandGroup>
                           {filteredInventoryItems.map((item) => (

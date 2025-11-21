@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
-import { api } from '../lib/apiClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -60,10 +59,8 @@ export const AdminDashboard: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const { data } = await api.get('/categories');
-      if (data && Array.isArray(data)) {
-        setCategoriesList(data);
-      }
+      await fetchCategories(); // Use AppContext's fetchCategories
+      // Categories are already set in AppContext, no need to set local state
     } catch (error) {
       console.error('Failed to load categories:', error);
     }
@@ -82,6 +79,14 @@ export const AdminDashboard: React.FC = () => {
       })));
     }
   };
+
+  // Update categoriesList when categories changes
+  useEffect(() => {
+    if (categories && Array.isArray(categories)) {
+      // Convert string[] to Category[] format for the table
+      setCategoriesList(categories.map(name => ({ id: name, name })));
+    }
+  }, [categories]);
 
   // Update foodDatabaseList when foodDatabase changes
   useEffect(() => {
@@ -301,7 +306,7 @@ export const AdminDashboard: React.FC = () => {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Name</TableHead>
+                    <TableHead className="w-full">Name</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>

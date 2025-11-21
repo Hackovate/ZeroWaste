@@ -52,6 +52,11 @@ export const inventoryService = {
     price?: number;
     imageUrl?: string;
   }, userId: string) {
+    // Don't create items with zero or negative quantity
+    if (data.quantity <= 0) {
+      throw new Error('Cannot create inventory item with zero or negative quantity');
+    }
+
     return await prisma.inventoryItem.create({
       data: {
         ...data,
@@ -70,7 +75,15 @@ export const inventoryService = {
     imageUrl: string;
   }>, userId: string) {
     // Verify ownership
-    await this.getById(id, userId);
+    const item = await this.getById(id, userId);
+
+    // Check if quantity is being updated and becomes 0 or less
+    if (data.quantity !== undefined && data.quantity <= 0) {
+      // Auto-delete item when quantity becomes 0 or less
+      return await prisma.inventoryItem.delete({
+        where: { id }
+      });
+    }
 
     return await prisma.inventoryItem.update({
       where: { id },
@@ -162,6 +175,13 @@ export const inventoryService = {
     
     // Calculate new quantity
     const newQuantity = Math.max(0, item.quantity - convertedQuantity);
+    
+    // If quantity becomes 0 or less, auto-delete the item
+    if (newQuantity <= 0) {
+      return await prisma.inventoryItem.delete({
+        where: { id }
+      });
+    }
     
     // Update inventory
     return await prisma.inventoryItem.update({
