@@ -10,6 +10,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { 
   Heart, 
   MapPin, 
@@ -27,6 +35,17 @@ import {
   Navigation
 } from 'lucide-react';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+
+// Dynamically import LeafletMap to avoid SSR issues
+const LeafletMap = dynamic(() => import('./LeafletMap'), { 
+  ssr: false,
+  loading: () => (
+    <div className="h-full w-full flex items-center justify-center bg-slate-100 dark:bg-slate-800">
+      <p className="text-muted-foreground">Loading map...</p>
+    </div>
+  )
+});
 
 const CATEGORIES = ['dairy', 'grain', 'fruit', 'vegetable', 'protein', 'oil'];
 const UNITS = ['kg', 'gm', 'ltr', 'pcs'];
@@ -35,6 +54,25 @@ const DISTRICTS = [
   'Rangpur', 'Mymensingh', 'Comilla', 'Gazipur', 'Narayanganj'
 ];
 const DIVISIONS = ['Dhaka', 'Chittagang', 'Sylhet', 'Rajshahi', 'Khulna', 'Barisal', 'Rangpur', 'Mymensingh'];
+
+const DISTRICT_COORDINATES: Record<string, { lat: number; lng: number }> = {
+  'Dhaka': { lat: 23.8103, lng: 90.4125 },
+  'Chittagong': { lat: 22.3569, lng: 91.7832 },
+  'Sylhet': { lat: 24.8949, lng: 91.8687 },
+  'Rajshahi': { lat: 24.3636, lng: 88.6241 },
+  'Khulna': { lat: 22.8456, lng: 89.5403 },
+  'Barisal': { lat: 22.7010, lng: 90.3535 },
+  'Rangpur': { lat: 25.7439, lng: 89.2752 },
+  'Mymensingh': { lat: 24.7471, lng: 90.4203 },
+  'Comilla': { lat: 23.4607, lng: 91.1809 },
+  'Gazipur': { lat: 24.0023, lng: 90.4264 },
+  'Narayanganj': { lat: 23.6238, lng: 90.5000 }
+};
+
+const defaultCenter = {
+  lat: 23.8103,
+  lng: 90.4125
+};
 
 export const Community: React.FC = () => {
   const { 
@@ -76,6 +114,7 @@ export const Community: React.FC = () => {
   const [viewMode, setViewMode] = useState<'cards' | 'list' | 'map'>('cards');
   const [showMatching, setShowMatching] = useState(false);
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
 
   // Fetch help requests on mount and when filters change
   useEffect(() => {
@@ -387,164 +426,110 @@ export const Community: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {(showMatching ? getMatchedRequests() : helpRequests).map(request => {
                     const matchScore = showMatching ? request.matchScore : null;
-                const trustScore = (request.trustedReports || 0) - (request.fraudReports || 0);
-                const isTrusted = trustScore >= 3;
-                const isSuspicious = (request.fraudReports || 0) >= 2;
+                    const trustScore = (request.trustedReports || 0) - (request.fraudReports || 0);
+                    const isTrusted = trustScore >= 3;
+                    const isSuspicious = (request.fraudReports || 0) >= 2;
                 
-                return (
-                <Card 
-                  key={request.id} 
-                  className={`flex flex-col transition-all ${
-                    isTrusted ? 'border-green-500 dark:border-green-600 shadow-green-100 dark:shadow-green-900/20' : 
-                    isSuspicious ? 'border-red-500 dark:border-red-600 shadow-red-100 dark:shadow-red-900/20' : 
-                    'hover:shadow-lg'
-                  }`}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-lg font-bold leading-tight">{request.title}</CardTitle>
-                      <div className="flex flex-col gap-1 items-end">
-                        {showMatching && matchScore !== null && matchScore > 0 && (
-                          <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 font-bold">
-                            {matchScore}% Match
-                          </Badge>
-                        )}
-                        <Badge className={getCategoryColor(request.category)}>
-                          {request.category}
-                        </Badge>
-                        {isTrusted && (
-                          <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300">
-                            ✓ Verified
-                          </Badge>
-                        )}
-                        {isSuspicious && (
-                          <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300">
-                            ⚠ Flagged
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-1 pt-2">
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin className="h-4 w-4 text-primary" />
-                        <span className="font-medium">{request.district}, {request.division}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Package className="h-4 w-4 text-primary" />
-                        <span className="font-semibold text-primary">{request.quantity} {request.unit}</span>
-                        <span className="text-muted-foreground">needed</span>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="flex-1 space-y-3 pt-0">
-                    {request.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-3">{request.description}</p>
-                    )}
-                    
-                    <div className="flex flex-wrap gap-2">
-                      <Badge variant={request.status === 'open' ? 'default' : 'secondary'} className="font-medium">
-                        {request.status === 'open' ? '🔓 Open' : request.status === 'fulfilled' ? '✓ Fulfilled' : '✕ Closed'}
-                      </Badge>
-                    </div>
-
-                    {request.neededBy && (
-                      <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-950/30 rounded-md border border-orange-200 dark:border-orange-800">
-                        <Calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                        <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
-                          Needed by: {new Date(request.neededBy).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                        </span>
-                      </div>
-                    )}
-
-                    <div className="pt-2 border-t space-y-2 bg-slate-50 dark:bg-slate-900/30 -mx-6 px-6 py-3 mt-3">
-                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contact Information</p>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                        <a href={`mailto:${request.contactEmail}`} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
-                          {request.contactEmail}
-                        </a>
-                      </div>
-                      {request.contactPhone && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
-                          <a href={`tel:${request.contactPhone}`} className="text-green-600 dark:text-green-400 hover:underline font-medium">
-                            {request.contactPhone}
-                          </a>
-                        </div>
-                      )}
-                      <div className="flex items-center gap-2 text-sm">
-                        <span className="font-bold text-foreground">{request.contactName}</span>
-                      </div>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="flex items-center justify-between gap-2 text-sm pt-2 border-t">
-                      <div className="flex items-center gap-1 text-pink-600 dark:text-pink-400">
-                        <Heart className="h-4 w-4 fill-current" />
-                        <span className="font-semibold">{request.donations?.length || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                        <ThumbsUp className="h-4 w-4" />
-                        <span className="font-semibold">{request.trustedReports || 0}</span>
-                      </div>
-                      <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
-                        <AlertTriangle className="h-4 w-4" />
-                        <span className="font-semibold">{request.fraudReports || 0}</span>
-                      </div>
-                    </div>
-                  </CardContent>
-
-                  <CardFooter className="flex-col gap-2 bg-slate-50 dark:bg-slate-900/20">
-                    {request.status === 'open' && (
-                      <div className="flex gap-2 w-full">
-                        <Input
-                          type="number"
-                          placeholder="Amount to donate"
-                          value={donationAmount[request.id] || ''}
-                          onChange={(e) => setDonationAmount(prev => ({ ...prev, [request.id]: e.target.value }))}
-                          className="flex-1"
-                        />
-                        <Button onClick={() => handleDonate(request.id)} size="sm" className="bg-primary hover:bg-primary/90">
-                          <Heart className="h-3 w-3 mr-1" />
-                          Donate
-                        </Button>
-                      </div>
-                    )}
-                    
-                    <div className="flex gap-2 w-full">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className={`flex-1 ${
-                          (request.trustedReports || 0) > 0 
-                            ? 'border-green-500 bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900' 
-                            : 'hover:border-green-500 hover:text-green-600'
+                    return (
+                      <Card 
+                        key={request.id} 
+                        className={`flex flex-col transition-all ${
+                          isTrusted ? 'border-green-500 dark:border-green-600 shadow-green-100 dark:shadow-green-900/20' : 
+                          isSuspicious ? 'border-red-500 dark:border-red-600 shadow-red-100 dark:shadow-red-900/20' : 
+                          'hover:shadow-lg'
                         }`}
-                        onClick={() => handleReport(request.id, false)}
                       >
-                        <ThumbsUp className="h-3 w-3 mr-1" />
-                        Trusted
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        className={`flex-1 ${
-                          (request.fraudReports || 0) > 0 
-                            ? 'border-red-500 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900' 
-                            : 'hover:border-red-500 hover:text-red-600'
-                        }`}
-                        onClick={() => handleReport(request.id, true)}
-                      >
-                        <AlertTriangle className="h-3 w-3 mr-1" />
-                        Report Fraud
-                      </Button>
-                    </div>
-                  </CardFooter>
-                </Card>
-              );
-              })}
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <CardTitle className="text-lg font-bold leading-tight">{request.title}</CardTitle>
+                            <div className="flex flex-col gap-1 items-end">
+                              {showMatching && matchScore !== null && matchScore > 0 && (
+                                <Badge className="bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 font-bold">
+                                  {matchScore}% Match
+                                </Badge>
+                              )}
+                              <Badge className={getCategoryColor(request.category)}>
+                                {request.category}
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          <div className="space-y-1 pt-2">
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <MapPin className="h-4 w-4 text-primary" />
+                              <span className="font-medium">{request.district}, {request.division}</span>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Package className="h-4 w-4 text-primary" />
+                              <span className="font-semibold text-primary">{request.quantity} {request.unit}</span>
+                              <span className="text-muted-foreground">needed</span>
+                            </div>
+                          </div>
+                        </CardHeader>
+                        
+                        <CardContent className="flex-1 space-y-3 pt-0">
+                          {request.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-3">{request.description}</p>
+                          )}
+                          
+                          <div className="flex flex-wrap gap-2">
+                            <Badge variant={request.status === 'open' ? 'default' : 'secondary'} className="font-medium">
+                              {request.status === 'open' ? '🔓 Open' : request.status === 'fulfilled' ? '✓ Fulfilled' : '✕ Closed'}
+                            </Badge>
+                          </div>
+
+                          {/* Trusted/Fraud Sign above date */}
+                          {(isTrusted || isSuspicious) && (
+                            <div className="flex items-center gap-2">
+                              {isTrusted && (
+                                <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border-green-300 w-full justify-center">
+                                  <ThumbsUp className="h-3 w-3 mr-1" /> Trusted Request
+                                </Badge>
+                              )}
+                              {isSuspicious && (
+                                <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200 border-red-300 w-full justify-center">
+                                  <AlertTriangle className="h-3 w-3 mr-1" /> Potential Fraud
+                                </Badge>
+                              )}
+                            </div>
+                          )}
+
+                          {request.neededBy && (
+                            <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-950/30 rounded-md border border-orange-200 dark:border-orange-800">
+                              <Calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                              <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+                                Needed by: {new Date(request.neededBy).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Stats */}
+                          <div className="flex items-center justify-between gap-2 text-sm pt-2 border-t mt-2">
+                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                              <Heart className="h-4 w-4 fill-current" />
+                              <span className="font-medium">{request.donations?.length || 0} Donations</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                              <ThumbsUp className="h-4 w-4" />
+                              <span className="font-medium">{request.trustedReports || 0} Trusted</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                              <AlertTriangle className="h-4 w-4" />
+                              <span className="font-medium">{request.fraudReports || 0} Reports</span>
+                            </div>
+                          </div>
+                          
+                          <Button 
+                            className="w-full mt-2" 
+                            variant="outline"
+                            onClick={() => setSelectedRequest(request)}
+                          >
+                            View Details & Donate
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
                 </div>
               )}
 
@@ -647,74 +632,12 @@ export const Community: React.FC = () => {
 
               {/* Map View */}
               {viewMode === 'map' && (
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="space-y-4">
-                      {/* Map Placeholder */}
-                      <div className="bg-slate-100 dark:bg-slate-800 rounded-lg h-96 flex items-center justify-center relative overflow-hidden">
-                        <div className="absolute inset-0 opacity-10">
-                          <div className="grid grid-cols-8 h-full">
-                            {Array.from({ length: 64 }).map((_, i) => (
-                              <div key={i} className="border border-slate-300 dark:border-slate-600"></div>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="relative z-10 text-center space-y-3">
-                          <MapIcon className="h-16 w-16 mx-auto text-muted-foreground/50" />
-                          <div>
-                            <p className="font-semibold text-lg">Interactive Map View</p>
-                            <p className="text-sm text-muted-foreground">Map visualization showing help requests by location</p>
-                            <p className="text-xs text-muted-foreground mt-2">
-                              Note: Full map integration requires Google Maps or Mapbox API
-                            </p>
-                          </div>
-                        </div>
-                        
-                        {/* Location Pins Overlay */}
-                        <div className="absolute inset-0 pointer-events-none">
-                          {(showMatching ? getMatchedRequests() : helpRequests).slice(0, 8).map((req, idx) => (
-                            <div 
-                              key={req.id}
-                              className="absolute"
-                              style={{
-                                left: `${15 + (idx % 4) * 20}%`,
-                                top: `${20 + Math.floor(idx / 4) * 40}%`
-                              }}
-                            >
-                              <div className="relative pointer-events-auto cursor-pointer group">
-                                <Navigation className="h-6 w-6 text-red-500 drop-shadow-lg transform -rotate-45" />
-                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover:block">
-                                  <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-3 text-xs whitespace-nowrap border">
-                                    <p className="font-bold">{req.title}</p>
-                                    <p className="text-muted-foreground">{req.district}</p>
-                                    <p className="text-primary font-semibold">{req.quantity} {req.unit}</p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      
-                      {/* Map Legend */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {(showMatching ? getMatchedRequests() : helpRequests).slice(0, 8).map(request => (
-                          <Card key={request.id} className="border-l-4 border-l-primary">
-                            <CardContent className="p-3 space-y-1">
-                              <p className="font-bold text-sm truncate">{request.title}</p>
-                              <p className="text-xs text-muted-foreground">{request.district}</p>
-                              <div className="flex items-center justify-between">
-                                <Badge className={getCategoryColor(request.category)} className="text-xs">
-                                  {request.category}
-                                </Badge>
-                                <span className="text-xs font-semibold">{request.quantity} {request.unit}</span>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
+                <Card className="h-[600px] relative overflow-hidden z-0">
+                  <LeafletMap 
+                    requests={showMatching ? getMatchedRequests() : helpRequests}
+                    onSelectRequest={setSelectedRequest}
+                    getCategoryColor={getCategoryColor}
+                  />
                 </Card>
               )}
             </>
@@ -725,18 +648,18 @@ export const Community: React.FC = () => {
             <div className="flex justify-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => fetchHelpRequests({ ...filters, sortBy, page: helpRequestsPagination.currentPage - 1 })}
-                disabled={helpRequestsPagination.currentPage === 1}
+                onClick={() => fetchHelpRequests({ ...filters, sortBy, page: helpRequestsPagination.page - 1 })}
+                disabled={helpRequestsPagination.page === 1}
               >
                 Previous
               </Button>
               <span className="flex items-center px-4">
-                Page {helpRequestsPagination.currentPage} of {helpRequestsPagination.totalPages}
+                Page {helpRequestsPagination.page} of {helpRequestsPagination.totalPages}
               </span>
               <Button
                 variant="outline"
-                onClick={() => fetchHelpRequests({ ...filters, sortBy, page: helpRequestsPagination.currentPage + 1 })}
-                disabled={helpRequestsPagination.currentPage === helpRequestsPagination.totalPages}
+                onClick={() => fetchHelpRequests({ ...filters, sortBy, page: helpRequestsPagination.page + 1 })}
+                disabled={helpRequestsPagination.page === helpRequestsPagination.totalPages}
               >
                 Next
               </Button>
@@ -915,6 +838,142 @@ export const Community: React.FC = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Help Request Details Modal */}
+      <Dialog open={!!selectedRequest} onOpenChange={(open) => !open && setSelectedRequest(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          {selectedRequest && (
+            <>
+              <DialogHeader>
+                <div className="flex items-start justify-between gap-2">
+                  <DialogTitle className="text-xl font-bold">{selectedRequest.title}</DialogTitle>
+                  <Badge className={getCategoryColor(selectedRequest.category)}>
+                    {selectedRequest.category}
+                  </Badge>
+                </div>
+                <DialogDescription>
+                  Posted on {new Date(selectedRequest.createdAt).toLocaleDateString()}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-2">
+                {/* Location & Quantity */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <MapPin className="h-4 w-4 text-primary" />
+                    <span>{selectedRequest.district}, {selectedRequest.division}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Package className="h-4 w-4 text-primary" />
+                    <span className="font-semibold">{selectedRequest.quantity} {selectedRequest.unit}</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="bg-muted/30 p-3 rounded-md">
+                  <p className="text-sm">{selectedRequest.description}</p>
+                </div>
+
+                {/* Needed By */}
+                {selectedRequest.neededBy && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-orange-50 dark:bg-orange-950/30 rounded-md border border-orange-200 dark:border-orange-800">
+                    <Calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                    <span className="text-sm font-semibold text-orange-700 dark:text-orange-300">
+                      Needed by: {new Date(selectedRequest.neededBy).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                    </span>
+                  </div>
+                )}
+
+                {/* Contact Info */}
+                <div className="space-y-2 border rounded-md p-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Contact Information</p>
+                  <div className="flex items-center gap-2 text-sm">
+                    <Mail className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    <a href={`mailto:${selectedRequest.contactEmail}`} className="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                      {selectedRequest.contactEmail}
+                    </a>
+                  </div>
+                  {selectedRequest.contactPhone && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Phone className="h-4 w-4 text-green-600 dark:text-green-400" />
+                      <a href={`tel:${selectedRequest.contactPhone}`} className="text-green-600 dark:text-green-400 hover:underline font-medium">
+                        {selectedRequest.contactPhone}
+                      </a>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-sm">
+                    <span className="font-bold text-foreground">{selectedRequest.contactName}</span>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="flex items-center justify-between gap-2 text-sm pt-2 border-t">
+                  <div className="flex items-center gap-1 text-pink-600 dark:text-pink-400">
+                    <Heart className="h-4 w-4 fill-current" />
+                    <span className="font-semibold">{selectedRequest.donations?.length || 0} Donations</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-green-600 dark:text-green-400">
+                    <ThumbsUp className="h-4 w-4" />
+                    <span className="font-semibold">{selectedRequest.trustedReports || 0} Trusted</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-red-600 dark:text-red-400">
+                    <AlertTriangle className="h-4 w-4" />
+                    <span className="font-semibold">{selectedRequest.fraudReports || 0} Reports</span>
+                  </div>
+                </div>
+
+                {/* Donate Section */}
+                {selectedRequest.status === 'open' && (
+                  <div className="space-y-2 pt-2 border-t">
+                    <Label>Make a Donation</Label>
+                    <div className="flex gap-2 w-full">
+                      <Input
+                        type="number"
+                        placeholder="Amount to donate"
+                        value={donationAmount[selectedRequest.id] || ''}
+                        onChange={(e) => setDonationAmount(prev => ({ ...prev, [selectedRequest.id]: e.target.value }))
+                        }
+                        className="flex-1"
+                      />
+                      <Button onClick={() => handleDonate(selectedRequest.id)} className="bg-primary hover:bg-primary/90">
+                        <Heart className="h-4 w-4 mr-2" />
+                        Donate
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button 
+                  variant="outline" 
+                  className={`flex-1 ${
+                    (selectedRequest.trustedReports || 0) > 0 
+                      ? 'border-green-500 bg-green-50 text-green-700 hover:bg-green-100 dark:bg-green-950 dark:text-green-300 dark:hover:bg-green-900' 
+                      : 'hover:border-green-500 hover:text-green-600'
+                  }`}
+                  onClick={() => handleReport(selectedRequest.id, false)}
+                >
+                  <ThumbsUp className="h-4 w-4 mr-2" />
+                  Mark as Trusted
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className={`flex-1 ${
+                    (selectedRequest.fraudReports || 0) > 0 
+                      ? 'border-red-500 bg-red-50 text-red-700 hover:bg-red-100 dark:bg-red-950 dark:text-red-300 dark:hover:bg-red-900' 
+                      : 'hover:border-red-500 hover:text-red-600'
+                  }`}
+                  onClick={() => handleReport(selectedRequest.id, true)}
+                >
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Report Fraud
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
