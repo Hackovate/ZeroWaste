@@ -44,20 +44,28 @@ export async function seedFoodDatabase(): Promise<void> {
 
     // Upload images and create food database items
     const itemsToCreate = await Promise.all(
-      foodItems.map(async (item, index) => {
+      foodItems.map(async (item) => {
         let imageUrl: string | undefined = undefined;
 
-        // Match image by order (first image → first item, etc.)
-        if (index < imageFiles.length) {
+        // Match image by name (e.g., "apple.jpg" matches item named "Apple")
+        const normalizedItemName = item.name.toLowerCase().replace(/\s+/g, '-');
+        const matchingImage = imageFiles.find(file => {
+          const fileNameWithoutExt = file.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '').toLowerCase();
+          return fileNameWithoutExt === normalizedItemName || fileNameWithoutExt.includes(normalizedItemName);
+        });
+
+        if (matchingImage) {
           try {
-            const imagePath = path.join(imagesPath, imageFiles[index]);
-            const fileName = `food-db-${item.name.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+            const imagePath = path.join(imagesPath, matchingImage);
+            const fileName = `food-db-${normalizedItemName}-${Date.now()}`;
             imageUrl = await imagekitService.uploadImageFromPath(imagePath, fileName);
             console.log(`Uploaded image for ${item.name}: ${imageUrl}`);
           } catch (error) {
             console.warn(`Failed to upload image for ${item.name}:`, error);
             // Continue without image if upload fails
           }
+        } else {
+          console.log(`No matching image found for ${item.name}`);
         }
 
         return {
