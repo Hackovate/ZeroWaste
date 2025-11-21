@@ -17,6 +17,16 @@ interface InventorySeed {
  */
 export async function seedInventory(userId: string): Promise<void> {
   try {
+    // Check if user already has inventory items (prevent duplicate seeding)
+    const existingCount = await prisma.inventoryItem.count({
+      where: { userId }
+    });
+    
+    if (existingCount > 0) {
+      console.log(`User ${userId} already has ${existingCount} inventory items. Skipping seed.`);
+      return;
+    }
+
     // Read seed file - resolve from project root to work in both dev and production
     const projectRoot = process.cwd();
     const seedFilePath = path.join(projectRoot, 'prisma', 'inventory.seed.json');

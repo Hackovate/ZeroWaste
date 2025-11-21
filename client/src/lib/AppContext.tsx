@@ -252,6 +252,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       localStorage.setItem('authToken', data.data.token);
       localStorage.setItem('currentUser', JSON.stringify(user));
       
+      // Fetch user's data after registration (inventory, food logs, resources)
+      await fetchInventory();
+      await fetchFoodLogs();
+      await fetchResources();
+      
       toast.success('Registration successful!');
       return true;
     } catch (error: any) {

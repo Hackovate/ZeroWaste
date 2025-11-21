@@ -14,8 +14,8 @@ export const getResources = async (
     const pageSize = limit ? parseInt(limit as string, 10) : 9; // Default 9 items per page
     const skip = (pageNumber - 1) * pageSize;
 
-    // Build where clause
-    const where = category ? { category: category as string } : {};
+    // Build where clause - categories are normalized to lowercase
+    const where = category ? { category: (category as string).toLowerCase() } : {};
 
     // Get total count for pagination
     const total = await prisma.resource.count({ where });

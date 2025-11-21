@@ -53,10 +53,21 @@ export const authService = {
     // Generate JWT token
     const token = generateToken({ id: user.id, email: user.email });
 
-    // Seed resources and inventory for new user (non-blocking)
-    // These run asynchronously and won't block registration if they fail
-    seedResources().catch(err => console.error('Failed to seed resources:', err));
-    seedInventory(user.id).catch(err => console.error('Failed to seed inventory:', err));
+    // Seed resources and inventory for new user
+    // Run seeding synchronously to ensure data is available immediately after registration
+    try {
+      await seedResources();
+    } catch (err) {
+      console.error('Failed to seed resources:', err);
+      // Continue even if seeding fails
+    }
+
+    try {
+      await seedInventory(user.id);
+    } catch (err) {
+      console.error('Failed to seed inventory:', err);
+      // Continue even if seeding fails
+    }
 
     return { user, token };
   },

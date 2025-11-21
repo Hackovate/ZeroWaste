@@ -30,13 +30,13 @@ export async function seedResources(): Promise<void> {
     const seedFileContent = fs.readFileSync(seedFilePath, 'utf-8');
     const resources: ResourceSeed[] = JSON.parse(seedFileContent);
 
-    // Insert resources
+    // Insert resources - normalize categories to lowercase
     await prisma.resource.createMany({
       data: resources.map(resource => ({
         title: resource.title,
         description: resource.description,
         url: resource.url,
-        category: resource.category,
+        category: resource.category.toLowerCase(),
         type: resource.type
       }))
     });
