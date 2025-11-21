@@ -259,6 +259,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       await fetchFoodDatabase();
       
       if (savedUser && token) {
+        // Optimistically set user from local storage
+        try {
+          const parsedUser = JSON.parse(savedUser);
+          setCurrentUser(parsedUser);
+        } catch (e) {
+          console.error('Failed to parse saved user', e);
+        }
+
         try {
           // Validate token with backend
           const { data } = await api.get('/auth/me');
@@ -295,18 +303,32 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           await fetchFoodLogs();
           await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
           await fetchResources();
-        } catch (error) {
-          // Token is invalid, clear everything
-          console.log('Invalid token, clearing localStorage');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('currentUser');
-          setCurrentUser(null);
+        } catch (error: any) {
+          // Only clear if it's an auth error (401/403)
+          if (error.response?.status === 401 || error.response?.status === 403) {
+            console.log('Invalid token, clearing localStorage');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            setCurrentUser(null);
+          } else {
+            console.warn('Failed to validate user (possible network error), keeping local session:', error);
+          }
         }
       }
     };
     
     validateUser();
   }, [fetchInventory, fetchFoodLogs, fetchResources, fetchFoodDatabase, fetchCategories]);
+
+  // Listen for unauthorized events from apiClient
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setCurrentUser(null);
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {

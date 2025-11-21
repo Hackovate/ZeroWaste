@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -65,29 +67,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
     }
   ];
 
-  const benefits = [
-    {
-      emoji: '📉',
-      title: 'Reduce Food Waste',
-      stat: 'Up to 40%',
-      description: 'Track expiration dates and optimize consumption',
-      gradient: 'from-emerald-400 to-teal-500'
-    },
-    {
-      emoji: '💰',
-      title: 'Save Money',
-      stat: 'Save TK 5,000+',
-      description: 'Reduce unnecessary purchases and food spoilage',
-      gradient: 'from-blue-400 to-indigo-500'
-    },
-    {
-      emoji: '🌍',
-      title: 'Help the Planet',
-      stat: '200kg CO₂',
-      description: 'Reduce your environmental impact per year',
-      gradient: 'from-green-400 to-emerald-500'
-    }
-  ];
+
 
   const steps = [
     'Create your free account in seconds',
@@ -97,7 +77,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FEF5F4] via-white to-[#F0F0F0] relative">
+    <div className="min-h-screen bg-linear-to-br from-[#FEF5F4] via-white to-[#F0F0F0] relative">
       {/* Scroll to Top Button - Fixed to bottom right */}
       <button
         onClick={scrollToTop}
@@ -112,7 +92,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
       {/* Hero Section */}
       <div className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-transparent to-transparent"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
           <div className="text-center relative z-10">
             <div className="flex justify-center mb-6 animate-fade-in">
@@ -120,7 +100,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 <img src="/assets/ZeroWaste-Full-Logo.svg" alt="ZeroWaste" className="h-full drop-shadow-lg" />
               </div>
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary via-[#FF6B63] to-primary bg-clip-text text-transparent mb-4 animate-slide-up">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-linear-to-r from-primary via-[#FF6B63] to-primary bg-clip-text text-transparent mb-4 animate-slide-up">
               Welcome to ZeroWaste
             </h1>
             <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto mb-8 animate-slide-up animation-delay-200">
@@ -140,51 +120,13 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         </div>
       </div>
 
-      {/* Benefits Section */}
-      <div className="bg-white py-12 sm:py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Why Choose ZeroWaste?
-            </h2>
-            <p className="text-base text-gray-600 max-w-2xl mx-auto">
-              Join thousands of households making a difference in food waste reduction
-            </p>
-          </div>
-          <div className="grid gap-6 md:grid-cols-3">
-            {benefits.map((benefit, index) => {
-              return (
-                <Card 
-                  key={benefit.title} 
-                  className="text-center border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group overflow-hidden relative"
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${benefit.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-                  <CardHeader className="relative z-10">
-                    <div className="flex justify-center mb-4">
-                      <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${benefit.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <span className="text-3xl">{benefit.emoji}</span>
-                      </div>
-                    </div>
-                    <CardTitle className="text-xl font-bold">{benefit.title}</CardTitle>
-                    <div className={`text-3xl font-bold bg-gradient-to-r ${benefit.gradient} bg-clip-text text-transparent mt-2`}>
-                      {benefit.stat}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="relative z-10">
-                    <p className="text-gray-600 text-sm">{benefit.description}</p>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
-        </div>
-      </div>
+
 
       {/* Features Section */}
-      <div className="py-12 sm:py-16 bg-gradient-to-b from-white to-gray-50">
+      <div className="py-12 sm:py-16 bg-linear-to-b from-white to-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3 bg-linear-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               Powerful Features
             </h2>
             <p className="text-base text-gray-600 max-w-2xl mx-auto">
@@ -198,9 +140,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                   key={feature.title} 
                   className="border-0 shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group overflow-hidden relative cursor-pointer"
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
+                  <div className={`absolute inset-0 bg-linear-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
                   <CardHeader className="relative z-10 pb-3">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300`}>
+                    <div className={`w-12 h-12 rounded-xl bg-linear-to-br ${feature.color} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300`}>
                       <span className="text-2xl">{feature.emoji}</span>
                     </div>
                     <CardTitle className="text-lg font-semibold">{feature.title}</CardTitle>
@@ -219,7 +161,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       <div className="bg-white py-12 sm:py-16">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-3 bg-linear-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
               How It Works
             </h2>
             <p className="text-base text-gray-600">
@@ -230,9 +172,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             {steps.map((step, index) => (
               <div 
                 key={index} 
-                className="flex items-center gap-4 p-4 rounded-xl bg-gradient-to-r from-[#FEF5F4] to-white border border-primary/10 hover:border-primary/30 hover:shadow-md transition-all duration-300 group"
+                className="flex items-center gap-4 p-4 rounded-xl bg-linear-to-r from-[#FEF5F4] to-white border border-primary/10 hover:border-primary/30 hover:shadow-md transition-all duration-300 group"
               >
-                <div className="shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-primary to-[#FF6B63] text-white flex items-center justify-center text-lg font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
+                <div className="shrink-0 w-10 h-10 rounded-full bg-linear-to-br from-primary to-[#FF6B63] text-white flex items-center justify-center text-lg font-bold shadow-md group-hover:scale-110 transition-transform duration-300">
                   {index + 1}
                 </div>
                 <p className="text-base font-medium text-gray-800 flex-1">{step}</p>
@@ -254,10 +196,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       </div>
 
       {/* CTA Section */}
-      <div className="py-12 sm:py-16 bg-gradient-to-b from-white to-gray-50">
+      <div className="py-12 sm:py-16 bg-linear-to-b from-white to-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Card className="bg-white border border-gray-200 shadow-2xl hover:shadow-3xl transition-shadow duration-300 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-50"></div>
+            <div className="absolute inset-0 bg-linear-to-r from-gray-50 to-white opacity-50"></div>
             <CardContent className="p-8 sm:p-12 text-center relative z-10">
               <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-black">
                 Ready to Make a Difference?
