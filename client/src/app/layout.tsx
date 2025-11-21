@@ -1,23 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "@/styles/globals.css";
 import "@/index.css";
 import { AppProvider } from "@/lib/AppContext";
 import { Toaster } from "@/components/ui/sonner";
 
+export const viewport: Viewport = {
+    width: "device-width",
+    initialScale: 1,
+    maximumScale: 1,
+    themeColor: "#F55951",
+};
+
 export const metadata: Metadata = {
     title: "ZeroWaste - Food Waste Management",
     description: "Track food inventory, log consumption, and reduce food waste",
     manifest: "/manifest.json",
-    themeColor: "#F55951",
     appleWebApp: {
         capable: true,
         statusBarStyle: "default",
         title: "ZeroWaste",
-    },
-    viewport: {
-        width: "device-width",
-        initialScale: 1,
-        maximumScale: 1,
     },
 };
 
