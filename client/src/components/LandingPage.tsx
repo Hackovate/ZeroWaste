@@ -40,25 +40,25 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
   const features = [
     {
-      icon: Package,
+      emoji: '📦',
       title: 'Smart Inventory',
       description: 'Track your food items with expiration alerts and smart categorization',
       color: 'from-blue-500 to-cyan-500'
     },
     {
-      icon: FileText,
+      emoji: '📝',
       title: 'Food Logging',
       description: 'Monitor consumption patterns and understand your eating habits',
       color: 'from-purple-500 to-pink-500'
     },
     {
-      icon: BarChart3,
+      emoji: '📊',
       title: 'Analytics Dashboard',
       description: 'Visualize your food usage with interactive charts and insights',
       color: 'from-green-500 to-emerald-500'
     },
     {
-      icon: BookOpen,
+      emoji: '📚',
       title: 'Resource Library',
       description: 'Access guides on nutrition, sustainability, and food storage',
       color: 'from-orange-500 to-red-500'
@@ -67,21 +67,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
 
   const benefits = [
     {
-      icon: TrendingDown,
+      emoji: '📉',
       title: 'Reduce Food Waste',
       stat: 'Up to 40%',
       description: 'Track expiration dates and optimize consumption',
       gradient: 'from-emerald-400 to-teal-500'
     },
     {
-      icon: DollarSign,
+      emoji: '💰',
       title: 'Save Money',
       stat: 'Save TK 5,000+',
       description: 'Reduce unnecessary purchases and food spoilage',
       gradient: 'from-blue-400 to-indigo-500'
     },
     {
-      icon: Leaf,
+      emoji: '🌍',
       title: 'Help the Planet',
       stat: '200kg CO₂',
       description: 'Reduce your environmental impact per year',
@@ -153,7 +153,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
           <div className="grid gap-6 md:grid-cols-3">
             {benefits.map((benefit, index) => {
-              const Icon = benefit.icon;
               return (
                 <Card 
                   key={benefit.title} 
@@ -163,7 +162,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                   <CardHeader className="relative z-10">
                     <div className="flex justify-center mb-4">
                       <div className={`w-14 h-14 rounded-full bg-gradient-to-br ${benefit.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                        <Icon className="w-7 h-7 text-white" />
+                        <span className="text-3xl">{benefit.emoji}</span>
                       </div>
                     </div>
                     <CardTitle className="text-xl font-bold">{benefit.title}</CardTitle>
@@ -194,7 +193,6 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           </div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {features.map((feature, index) => {
-              const Icon = feature.icon;
               return (
                 <Card 
                   key={feature.title} 
@@ -203,7 +201,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                   <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-10 transition-opacity duration-300`}></div>
                   <CardHeader className="relative z-10 pb-3">
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${feature.color} flex items-center justify-center mb-3 shadow-md group-hover:scale-110 transition-transform duration-300`}>
-                      <Icon className="w-6 h-6 text-white" />
+                      <span className="text-2xl">{feature.emoji}</span>
                     </div>
                     <CardTitle className="text-lg font-semibold">{feature.title}</CardTitle>
                   </CardHeader>
@@ -258,22 +256,19 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       {/* CTA Section */}
       <div className="py-12 sm:py-16 bg-gradient-to-b from-white to-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Card className="bg-gradient-to-r from-primary via-[#FF6B63] to-primary text-white border-0 shadow-2xl hover:shadow-3xl transition-shadow duration-300 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-[#FF6B63]/90"></div>
-            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32"></div>
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full -ml-24 -mb-24"></div>
+          <Card className="bg-white border border-gray-200 shadow-2xl hover:shadow-3xl transition-shadow duration-300 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-gray-50 to-white opacity-50"></div>
             <CardContent className="p-8 sm:p-12 text-center relative z-10">
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-white">
+              <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-black">
                 Ready to Make a Difference?
               </h2>
-              <p className="text-base sm:text-lg mb-8 text-white/95 max-w-2xl mx-auto">
+              <p className="text-base sm:text-lg mb-8 text-gray-800 max-w-2xl mx-auto">
                 Join ZeroWaste today and start your journey towards sustainable living and smarter food management
               </p>
               <Button 
                 onClick={onGetStarted} 
                 size="lg" 
-                variant="secondary"
-                className="h-12 px-8 text-base font-semibold bg-white text-primary hover:bg-gray-50 hover:scale-105 shadow-lg transition-all duration-300"
+                className="h-12 px-8 text-base font-semibold bg-primary text-white hover:bg-primary/90 hover:scale-105 shadow-lg transition-all duration-300"
               >
                 Get Started Now - It's Free!
                 <ArrowRight className="ml-2 w-5 h-5" />
