@@ -1,7 +1,6 @@
 import express, { Application } from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 
@@ -17,6 +16,9 @@ import inventoryRoutes from './routes/inventory.routes';
 import foodLogRoutes from './routes/foodLog.routes';
 import userRoutes from './routes/user.routes';
 import resourceRoutes from './routes/resource.routes';
+import foodDatabaseRoutes from './routes/foodDatabase.routes';
+import categoryRoutes from './routes/category.routes';
+import adminRoutes from './routes/admin.routes';
 
 // Import middleware
 import { errorHandler } from './middleware/errorHandler';
@@ -42,13 +44,7 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
-  message: 'Too many requests from this IP, please try again later.',
-});
-app.use('/api/', limiter);
+// Rate limiting removed - no limits applied
 
 // Health check
 app.get('/health', (req, res) => {
@@ -61,6 +57,9 @@ app.use('/api/inventory', inventoryRoutes);
 app.use('/api/food-logs', foodLogRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/resources', resourceRoutes);
+app.use('/api/food-database', foodDatabaseRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Error handling middleware (must be last)
 app.use(errorHandler);

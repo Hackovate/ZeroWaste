@@ -1,9 +1,10 @@
 'use client';
 
 import React from 'react';
-import { Home, FileText, Package, BookOpen, Globe, Camera, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Home, FileText, Package, BookOpen, Globe, Camera, ChevronLeft, ChevronRight, Shield } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from './ui/utils';
+import { useApp } from '@/lib/AppContext';
 
 interface AppSidebarProps {
   currentView: string;
@@ -12,7 +13,7 @@ interface AppSidebarProps {
   onToggleCollapse: () => void;
 }
 
-const navItems = [
+const baseNavItems = [
   { id: 'dashboard', label: 'Dashboard', icon: Home },
   { id: 'logs', label: 'Food Logs', icon: FileText },
   { id: 'inventory', label: 'Inventory', icon: Package },
@@ -21,12 +22,22 @@ const navItems = [
   { id: 'community', label: 'Community', icon: Globe },
 ];
 
+const adminNavItem = { id: 'admin', label: 'Admin', icon: Shield };
+
 export const AppSidebar: React.FC<AppSidebarProps> = ({
   currentView,
   onNavigate,
   isCollapsed,
   onToggleCollapse,
 }) => {
+  const { currentUser } = useApp();
+  const isAdmin = currentUser?.role === 'admin';
+  
+  // Include admin nav item if user is admin
+  const navItems = isAdmin 
+    ? [...baseNavItems, adminNavItem]
+    : baseNavItems;
+
   return (
     <aside
       className={cn(

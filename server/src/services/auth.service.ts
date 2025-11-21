@@ -1,8 +1,6 @@
 import argon2 from 'argon2';
 import prisma from '../config/database';
 import { generateToken } from '../utils/jwt';
-import { seedResources } from '../utils/seedResources';
-import { seedInventory } from '../utils/seedInventory';
 
 export const authService = {
   async register(data: {
@@ -50,26 +48,34 @@ export const authService = {
       }
     });
 
-    // Generate JWT token
-    const token = generateToken({ id: user.id, email: user.email });
+    // Fetch user with role for token
+    const userWithRole = await prisma.user.findUnique({
+      where: { id: user.id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        role: true,
+        householdSize: true,
+        dietaryPreferences: true,
+        district: true,
+        division: true,
+        onboardingCompleted: true,
+        createdAt: true
+      }
+    });
 
-    // Seed resources and inventory for new user
-    // Run seeding synchronously to ensure data is available immediately after registration
-    try {
-      await seedResources();
-    } catch (err) {
-      console.error('Failed to seed resources:', err);
-      // Continue even if seeding fails
-    }
+    // Generate JWT token with role
+    const token = generateToken({ 
+      id: user.id, 
+      email: user.email,
+      role: userWithRole?.role || 'user'
+    });
 
-    try {
-      await seedInventory(user.id);
-    } catch (err) {
-      console.error('Failed to seed inventory:', err);
-      // Continue even if seeding fails
-    }
+    // Note: Seed data is now managed by admin via seed scripts
+    // Seeds only run on fresh database or manually via prisma seed command
 
-    return { user, token };
+    return { user: userWithRole, token };
   },
 
   async login(email: string, password: string) {
@@ -89,8 +95,12 @@ export const authService = {
       throw new Error('Invalid email or password');
     }
 
-    // Generate JWT token
-    const token = generateToken({ id: user.id, email: user.email });
+    // Generate JWT token with role
+    const token = generateToken({ 
+      id: user.id, 
+      email: user.email,
+      role: user.role || 'user'
+    });
 
     // Return user without password
     const { passwordHash, ...userWithoutPassword } = user;
@@ -105,6 +115,7 @@ export const authService = {
         id: true,
         email: true,
         name: true,
+        role: true,
         householdSize: true,
         dietaryPreferences: true,
         budgetPreference: true,

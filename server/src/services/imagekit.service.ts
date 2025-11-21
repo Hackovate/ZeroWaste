@@ -62,6 +62,28 @@ export const imagekitService = {
   },
 
   /**
+   * Upload image from file path (for seeding)
+   */
+  async uploadImageFromPath(filePath: string, fileName: string): Promise<string> {
+    try {
+      const fileBuffer = fs.readFileSync(filePath);
+      
+      const response = await imagekit.upload({
+        file: fileBuffer,
+        fileName: fileName,
+        folder: '/zerowaste/food-database',
+        tags: ['food', 'zerowaste', 'food-database'],
+        useUniqueFileName: true,
+      });
+
+      return response.url;
+    } catch (error) {
+      console.error('Failed to upload image from path:', error);
+      throw new Error('Failed to upload image to ImageKit');
+    }
+  },
+
+  /**
    * Delete image from ImageKit
    */
   async deleteImage(imageUrl: string): Promise<void> {

@@ -9,10 +9,14 @@ export const getInventory = async (
   next: NextFunction
 ) => {
   try {
-    const inventory = await inventoryService.getAll(req.user!.id);
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 10;
+    
+    const result = await inventoryService.getAll(req.user!.id, page, limit);
     res.json({
       success: true,
-      data: inventory,
+      data: result.items,
+      pagination: result.pagination,
     });
   } catch (error) {
     next(error);
@@ -126,7 +130,9 @@ export const getInventoryStats = async (
   next: NextFunction
 ) => {
   try {
-    const inventory = await inventoryService.getAll(req.user!.id);
+    // Get all items for stats (no pagination)
+    const result = await inventoryService.getAll(req.user!.id, 1, 10000);
+    const inventory = result.items;
 
     const totalItems = inventory.length;
     const categoryBreakdown = inventory.reduce((acc, item) => {

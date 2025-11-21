@@ -1,6 +1,12 @@
 import jwt from 'jsonwebtoken';
 
-export const generateToken = (payload: { id: string; email: string }): string => {
+export interface JwtPayload {
+  id: string;
+  email: string;
+  role?: string;
+}
+
+export const generateToken = (payload: JwtPayload): string => {
   return jwt.sign(
     payload, 
     process.env.JWT_SECRET as string,
@@ -8,6 +14,6 @@ export const generateToken = (payload: { id: string; email: string }): string =>
   );
 };
 
-export const verifyToken = (token: string) => {
-  return jwt.verify(token, process.env.JWT_SECRET as string);
+export const verifyToken = (token: string): JwtPayload => {
+  return jwt.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
 };

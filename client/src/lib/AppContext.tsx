@@ -1,11 +1,20 @@
 'use client';
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import { User, FoodLog, InventoryItem, Resource } from './data';
+import { User, FoodLog, InventoryItem, Resource, FoodItem } from './data';
 import { api } from './apiClient';
 import { toast } from 'sonner';
 
 interface ResourcesPagination {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasNextPage: boolean;
+  hasPreviousPage: boolean;
+}
+
+interface InventoryPagination {
   page: number;
   limit: number;
   total: number;
@@ -19,6 +28,8 @@ interface AppContextType {
   users: User[];
   foodLogs: FoodLog[];
   inventory: InventoryItem[];
+  inventoryPagination: InventoryPagination | null;
+  foodDatabase: FoodItem[];
   resources: Resource[];
   resourcesPagination: ResourcesPagination | null;
   categories: string[];
@@ -34,9 +45,15 @@ interface AppContextType {
   deleteInventoryItem: (id: string) => Promise<void>;
   uploadImage: (file: File) => Promise<string>;
   uploadInventoryImage: (file: File) => Promise<string>;
-  addCategory: (category: string) => void;
-  deleteCategory: (category: string) => void;
-  fetchInventory: () => Promise<void>;
+  fetchCategories: () => Promise<void>;
+  createCategory: (name: string) => Promise<void>;
+  updateCategory: (id: string, name: string) => Promise<void>;
+  deleteCategory: (id: string) => Promise<void>;
+  createFoodDatabaseItem: (data: { name: string; category: string; expirationEstimate: number }) => Promise<void>;
+  updateFoodDatabaseItem: (id: string, data: { name?: string; category?: string; expirationEstimate?: number }) => Promise<void>;
+  deleteFoodDatabaseItem: (id: string) => Promise<void>;
+  fetchInventory: (page?: number, limit?: number) => Promise<void>;
+  fetchFoodDatabase: () => Promise<void>;
   fetchFoodLogs: () => Promise<void>;
   fetchResources: (page?: number, limit?: number, category?: string) => Promise<void>;
 }
@@ -60,32 +77,132 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
   const [foodLogs, setFoodLogs] = useState<FoodLog[]>([]);
   const [inventory, setInventory] = useState<InventoryItem[]>([]);
+  const [inventoryPagination, setInventoryPagination] = useState<InventoryPagination | null>(null);
+  const [foodDatabase, setFoodDatabase] = useState<FoodItem[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [resourcesPagination, setResourcesPagination] = useState<ResourcesPagination | null>(null);
   const [loading, setLoading] = useState(false);
-  const [categories, setCategories] = useState<string[]>([
-    'dairy', 'grain', 'fruit', 'vegetable', 'protein', 'oil'
-  ]);
+  const [categories, setCategories] = useState<string[]>([]);
 
-  // Fetch inventory from backend
-  const fetchInventory = async () => {
+  // Fetch inventory from backend with pagination
+  const fetchInventory = useCallback(async (page: number = 1, limit: number = 10, retryCount = 0) => {
     try {
-      const { data } = await api.get('/inventory');
+      const { data } = await api.get(`/inventory?page=${page}&limit=${limit}`);
       setInventory(data.data);
-    } catch (error) {
-      console.error('Failed to fetch inventory:', error);
+      if (data.pagination) {
+        setInventoryPagination(data.pagination);
+      }
+    } catch (error: any) {
+      // Handle network errors (backend might not be running)
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.warn('Backend server is not available. Inventory will not be loaded.');
+        setInventory([]);
+        setInventoryPagination(null);
+        return;
+      }
+      
+      // Handle rate limiting errors gracefully
+      if (error.response?.status === 429 && retryCount < 3) {
+        console.warn(`Rate limit reached for inventory. Retrying in 2 seconds... (${retryCount + 1}/3)`);
+        // Retry after a delay
+        setTimeout(() => {
+          fetchInventory(page, limit, retryCount + 1);
+        }, 2000); // Retry after 2 seconds
+      } else {
+        console.error('Failed to fetch inventory:', error);
+        // Set empty array as fallback
+        setInventory([]);
+        setInventoryPagination(null);
+      }
     }
-  };
+  }, []);
+
+  // Fetch food database from backend (public data)
+  const fetchFoodDatabase = useCallback(async (retryCount = 0) => {
+    try {
+      const { data } = await api.get('/food-database');
+      setFoodDatabase(data.data);
+    } catch (error: any) {
+      // Handle network errors (backend might not be running)
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.warn('Backend server is not available. Food database will not be loaded.');
+        // Set empty array as fallback - app can still work without food database
+        setFoodDatabase([]);
+        return;
+      }
+      
+      // Handle rate limiting errors gracefully
+      if (error.response?.status === 429 && retryCount < 3) {
+        console.warn(`Rate limit reached for food database. Retrying in 2 seconds... (${retryCount + 1}/3)`);
+        // Retry after a delay
+        setTimeout(() => {
+          fetchFoodDatabase(retryCount + 1);
+        }, 2000); // Retry after 2 seconds
+      } else {
+        console.error('Failed to fetch food database:', error);
+        // Set empty array as fallback
+        setFoodDatabase([]);
+      }
+    }
+  }, []);
 
   // Fetch food logs from backend
-  const fetchFoodLogs = async () => {
+  const fetchFoodLogs = useCallback(async (retryCount = 0) => {
     try {
       const { data } = await api.get('/food-logs');
       setFoodLogs(data.data);
-    } catch (error) {
-      console.error('Failed to fetch food logs:', error);
+    } catch (error: any) {
+      // Handle network errors gracefully
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.warn('Backend server is not available. Food logs will not be loaded.');
+        setFoodLogs([]);
+        return;
+      }
+      
+      // Handle rate limiting errors gracefully (shouldn't happen now, but keep for safety)
+      if (error.response?.status === 429 && retryCount < 3) {
+        console.warn(`Rate limit reached for food logs. Retrying in 2 seconds... (${retryCount + 1}/3)`);
+        // Retry after a delay
+        setTimeout(() => {
+          fetchFoodLogs(retryCount + 1);
+        }, 2000); // Retry after 2 seconds
+      } else {
+        console.error('Failed to fetch food logs:', error);
+        setFoodLogs([]);
+      }
     }
-  };
+  }, []);
+
+  // Fetch categories from backend
+  const fetchCategories = useCallback(async (retryCount = 0) => {
+    try {
+      const { data } = await api.get('/categories');
+      if (data && data.data) {
+        setCategories(data.data.map((cat: { name: string }) => cat.name));
+      }
+    } catch (error: any) {
+      // Handle network errors (backend might not be running)
+      if (error.code === 'ERR_NETWORK' || error.message === 'Network Error') {
+        console.warn('Backend server is not available. Categories will not be loaded.');
+        // Set default categories as fallback - app can still work without backend
+        setCategories(['dairy', 'grain', 'fruit', 'vegetable', 'protein', 'oil']);
+        return;
+      }
+      
+      // Handle rate limiting errors gracefully
+      if (error.response?.status === 429 && retryCount < 3) {
+        console.warn(`Rate limit reached for categories. Retrying in 2 seconds... (${retryCount + 1}/3)`);
+        // Retry after a delay
+        setTimeout(() => {
+          fetchCategories(retryCount + 1);
+        }, 2000); // Retry after 2 seconds
+      } else {
+        console.error('Failed to fetch categories:', error);
+        // Set default categories as fallback
+        setCategories(['dairy', 'grain', 'fruit', 'vegetable', 'protein', 'oil']);
+      }
+    }
+  }, []);
 
   // Fetch resources from backend with pagination
   const fetchResources = useCallback(async (page: number = 1, limit: number = 9, category?: string) => {
@@ -138,6 +255,9 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const savedUser = localStorage.getItem('currentUser');
       const token = localStorage.getItem('authToken');
       
+      // Fetch food database (public data, no auth needed)
+      await fetchFoodDatabase();
+      
       if (savedUser && token) {
         try {
           // Validate token with backend
@@ -154,6 +274,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
               district: data.data.district || '',
               division: data.data.division || ''
             },
+            role: data.data.role || 'user',
             imageUrl: data.data.imageUrl,
             familyMembers: data.data.familyMembers?.map((fm: any) => ({
               id: fm.id,
@@ -168,9 +289,11 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
           setCurrentUser(user);
           localStorage.setItem('currentUser', JSON.stringify(user));
           
-          // Fetch user's data from backend
-          await fetchInventory();
+          // Fetch user's data from backend with small delays to prevent rate limiting
+          await fetchInventory(1, 10);
+          await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
           await fetchFoodLogs();
+          await new Promise(resolve => setTimeout(resolve, 100)); // Small delay
           await fetchResources();
         } catch (error) {
           // Token is invalid, clear everything
@@ -183,7 +306,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     };
     
     validateUser();
-  }, []);
+  }, [fetchInventory, fetchFoodLogs, fetchResources, fetchFoodDatabase, fetchCategories]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
@@ -194,6 +317,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         id: data.data.user.id,
         name: data.data.user.name,
         email: data.data.user.email,
+        role: data.data.user.role || 'user',
         householdSize: data.data.user.householdSize,
         dietaryPreferences: data.data.user.dietaryPreferences,
         location: {
@@ -208,9 +332,10 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       localStorage.setItem('currentUser', JSON.stringify(user));
       
       // Fetch user's data
-      await fetchInventory();
+      await fetchInventory(1, 10);
       await fetchFoodLogs();
       await fetchResources();
+      await fetchCategories();
       
       toast.success('Login successful!');
       return true;
@@ -239,6 +364,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         id: data.data.user.id,
         name: data.data.user.name,
         email: data.data.user.email,
+        role: data.data.user.role || 'user',
         householdSize: data.data.user.householdSize,
         dietaryPreferences: data.data.user.dietaryPreferences,
         location: {
@@ -253,7 +379,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       localStorage.setItem('currentUser', JSON.stringify(user));
       
       // Fetch user's data after registration (inventory, food logs, resources)
-      await fetchInventory();
+      await fetchInventory(1, 10);
       await fetchFoodLogs();
       await fetchResources();
       
@@ -435,20 +561,79 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     }
   };
 
-  const addCategory = (category: string) => {
-    if (!categories.includes(category)) {
-      setCategories([...categories, category]);
+  // Admin-only category management
+  const createCategory = async (name: string): Promise<void> => {
+    try {
+      const { data } = await api.post('/admin/categories', { name });
+      await fetchCategories(); // Refresh categories list
+      toast.success('Category created successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to create category');
+      throw error;
     }
   };
 
-  const deleteCategory = (category: string) => {
-    setCategories(categories.filter(c => c !== category));
+  const updateCategory = async (id: string, name: string): Promise<void> => {
+    try {
+      const { data } = await api.patch(`/admin/categories/${id}`, { name });
+      await fetchCategories(); // Refresh categories list
+      toast.success('Category updated successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update category');
+      throw error;
+    }
   };
 
-  // Fetch resources on mount (resources are public, no auth needed)
+  const deleteCategory = async (id: string): Promise<void> => {
+    try {
+      await api.delete(`/admin/categories/${id}`);
+      await fetchCategories(); // Refresh categories list
+      toast.success('Category deleted successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to delete category');
+      throw error;
+    }
+  };
+
+  // Admin-only food database management
+  const createFoodDatabaseItem = async (data: { name: string; category: string; expirationEstimate: number }): Promise<void> => {
+    try {
+      await api.post('/admin/food-database', data);
+      await fetchFoodDatabase(); // Refresh food database
+      toast.success('Food item created successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to create food item');
+      throw error;
+    }
+  };
+
+  const updateFoodDatabaseItem = async (id: string, data: { name?: string; category?: string; expirationEstimate?: number }): Promise<void> => {
+    try {
+      await api.patch(`/admin/food-database/${id}`, data);
+      await fetchFoodDatabase(); // Refresh food database
+      toast.success('Food item updated successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update food item');
+      throw error;
+    }
+  };
+
+  const deleteFoodDatabaseItem = async (id: string): Promise<void> => {
+    try {
+      await api.delete(`/admin/food-database/${id}`);
+      await fetchFoodDatabase(); // Refresh food database
+      toast.success('Food item deleted successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to delete food item');
+      throw error;
+    }
+  };
+
+  // Fetch resources and categories on mount (public data, no auth needed)
   useEffect(() => {
     fetchResources();
-  }, [fetchResources]);
+    fetchCategories();
+  }, [fetchResources, fetchCategories]);
 
   return (
     <AppContext.Provider
@@ -457,6 +642,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         users,
         foodLogs,
         inventory,
+        inventoryPagination,
+        foodDatabase,
         resources,
         resourcesPagination,
         categories,
@@ -472,9 +659,15 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         deleteInventoryItem,
         uploadImage,
         uploadInventoryImage,
-        addCategory,
+        fetchCategories,
+        createCategory,
+        updateCategory,
         deleteCategory,
+        createFoodDatabaseItem,
+        updateFoodDatabaseItem,
+        deleteFoodDatabaseItem,
         fetchInventory,
+        fetchFoodDatabase,
         fetchFoodLogs,
         fetchResources,
       }}

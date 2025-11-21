@@ -1,28 +1,57 @@
 import { PrismaClient } from '@prisma/client';
-import * as fs from 'fs';
-import * as path from 'path';
+import argon2 from 'argon2';
+import { seedResources } from '../src/utils/seedResources';
+import { seedCategories } from '../src/utils/seedCategories';
+import { seedFoodDatabase } from '../src/utils/seedFoodDatabase';
 
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding resources...');
+  console.log('Starting database seeding...');
+
+  // Create admin user if it doesn't exist
+  console.log('Creating admin user...');
+  const adminEmail = 'admin@mail.com';
+  const adminPassword = 'admin123';
   
-  // Read resources from JSON file
-  const resourcesPath = path.join(__dirname, 'resources.seed.json');
-  const resourcesContent = fs.readFileSync(resourcesPath, 'utf-8');
-  const resources = JSON.parse(resourcesContent);
-  
-  // Clear existing resources
-  await prisma.resource.deleteMany({});
-  
-  // Insert new resources
-  for (const resource of resources) {
-    await prisma.resource.create({
-      data: resource
+  const existingAdmin = await prisma.user.findUnique({
+    where: { email: adminEmail }
+  });
+
+  if (!existingAdmin) {
+    const passwordHash = await argon2.hash(adminPassword);
+    await prisma.user.create({
+      data: {
+        email: adminEmail,
+        passwordHash,
+        name: 'Admin',
+        role: 'admin'
+      }
     });
+    console.log('Admin user created successfully');
+  } else {
+    // Update existing admin user to ensure role is set
+    if (existingAdmin.role !== 'admin') {
+      await prisma.user.update({
+        where: { id: existingAdmin.id },
+        data: { role: 'admin' }
+      });
+      console.log('Existing user updated to admin role');
+    } else {
+      console.log('Admin user already exists');
+    }
   }
-  
-  console.log(`Seeded ${resources.length} resources`);
+
+  // Seed categories (idempotent - only seeds if empty)
+  await seedCategories();
+
+  // Seed resources (idempotent - only seeds if empty)
+  await seedResources();
+
+  // Seed food database (idempotent - only seeds if empty)
+  await seedFoodDatabase();
+
+  console.log('Database seeding completed!');
 }
 
 main()

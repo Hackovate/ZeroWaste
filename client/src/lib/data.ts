@@ -5,7 +5,8 @@ export interface FoodItem {
   name: string;
   category: string;
   expirationEstimate: number; // days
-  price: number;
+  imageUrl?: string;
+  // Note: price and quantity are user-specific, not in FOOD_DATABASE
 }
 
 export interface InventoryItem extends FoodItem {
@@ -13,6 +14,7 @@ export interface InventoryItem extends FoodItem {
   unit: 'kg' | 'gm' | 'ltr' | 'pcs';
   dateAdded: string;
   imageUrl?: string;
+  price?: number;
 }
 
 export interface FoodLog {
@@ -39,6 +41,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  role?: 'user' | 'admin';
   householdSize: number;
   dietaryPreferences: string[];
   budgetPreference?: 'low' | 'medium' | 'high' | 'premium';
@@ -71,28 +74,8 @@ export const HEALTH_CONDITIONS = [
   'Other'
 ];
 
-export const FOOD_DATABASE: FoodItem[] = [
-  { id: '1', name: 'Milk', category: 'dairy', expirationEstimate: 7, price: 99 },
-  { id: '2', name: 'Cheddar Cheese', category: 'dairy', expirationEstimate: 30, price: 150 },
-  { id: '3', name: 'Yogurt', category: 'dairy', expirationEstimate: 14, price: 120 },
-  { id: '4', name: 'White Bread', category: 'grain', expirationEstimate: 7, price: 80 },
-  { id: '5', name: 'Brown Rice', category: 'grain', expirationEstimate: 365, price: 200 },
-  { id: '6', name: 'Pasta', category: 'grain', expirationEstimate: 730, price: 60 },
-  { id: '7', name: 'Bananas', category: 'fruit', expirationEstimate: 5, price: 50 },
-  { id: '8', name: 'Apples', category: 'fruit', expirationEstimate: 14, price: 120 },
-  { id: '9', name: 'Strawberries', category: 'fruit', expirationEstimate: 5, price: 180 },
-  { id: '10', name: 'Carrots', category: 'vegetable', expirationEstimate: 21, price: 70 },
-  { id: '11', name: 'Broccoli', category: 'vegetable', expirationEstimate: 7, price: 90 },
-  { id: '12', name: 'Spinach', category: 'vegetable', expirationEstimate: 7, price: 100 },
-  { id: '13', name: 'Chicken Breast', category: 'protein', expirationEstimate: 2, price: 280 },
-  { id: '14', name: 'Ground Beef', category: 'protein', expirationEstimate: 2, price: 250 },
-  { id: '15', name: 'Eggs', category: 'protein', expirationEstimate: 28, price: 140 },
-  { id: '16', name: 'Olive Oil', category: 'oil', expirationEstimate: 365, price: 350 },
-  { id: '17', name: 'Butter', category: 'dairy', expirationEstimate: 90, price: 160 },
-  { id: '18', name: 'Tomatoes', category: 'vegetable', expirationEstimate: 7, price: 100 },
-  { id: '19', name: 'Onions', category: 'vegetable', expirationEstimate: 30, price: 60 },
-  { id: '20', name: 'Potatoes', category: 'vegetable', expirationEstimate: 60, price: 150 },
-];
+// FOOD_DATABASE is now fetched from the backend API via AppContext
+// See: client/src/lib/AppContext.tsx - fetchFoodDatabase()
 
 export const RESOURCES: Resource[] = [
   {

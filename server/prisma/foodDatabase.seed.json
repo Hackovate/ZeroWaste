@@ -1,0 +1,23 @@
+[
+  { "name": "Milk", "category": "dairy", "expirationEstimate": 7 },
+  { "name": "Cheddar Cheese", "category": "dairy", "expirationEstimate": 30 },
+  { "name": "Yogurt", "category": "dairy", "expirationEstimate": 14 },
+  { "name": "White Bread", "category": "grain", "expirationEstimate": 7 },
+  { "name": "Brown Rice", "category": "grain", "expirationEstimate": 365 },
+  { "name": "Pasta", "category": "grain", "expirationEstimate": 730 },
+  { "name": "Bananas", "category": "fruit", "expirationEstimate": 5 },
+  { "name": "Apples", "category": "fruit", "expirationEstimate": 14 },
+  { "name": "Strawberries", "category": "fruit", "expirationEstimate": 5 },
+  { "name": "Carrots", "category": "vegetable", "expirationEstimate": 21 },
+  { "name": "Broccoli", "category": "vegetable", "expirationEstimate": 7 },
+  { "name": "Spinach", "category": "vegetable", "expirationEstimate": 7 },
+  { "name": "Chicken Breast", "category": "protein", "expirationEstimate": 2 },
+  { "name": "Ground Beef", "category": "protein", "expirationEstimate": 2 },
+  { "name": "Eggs", "category": "protein", "expirationEstimate": 28 },
+  { "name": "Olive Oil", "category": "oil", "expirationEstimate": 365 },
+  { "name": "Butter", "category": "dairy", "expirationEstimate": 90 },
+  { "name": "Tomatoes", "category": "vegetable", "expirationEstimate": 7 },
+  { "name": "Onions", "category": "vegetable", "expirationEstimate": 30 },
+  { "name": "Potatoes", "category": "vegetable", "expirationEstimate": 60 }
+]
+

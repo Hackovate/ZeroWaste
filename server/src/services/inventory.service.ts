@@ -1,11 +1,34 @@
 import prisma from '../config/database';
 
 export const inventoryService = {
-  async getAll(userId: string) {
-    return await prisma.inventoryItem.findMany({
-      where: { userId },
-      orderBy: { dateAdded: 'desc' }
-    });
+  async getAll(userId: string, page: number = 1, limit: number = 10) {
+    const skip = (page - 1) * limit;
+    
+    const [items, total] = await Promise.all([
+      prisma.inventoryItem.findMany({
+        where: { userId },
+        orderBy: { dateAdded: 'desc' },
+        skip,
+        take: limit
+      }),
+      prisma.inventoryItem.count({
+        where: { userId }
+      })
+    ]);
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      items,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages,
+        hasNextPage: page < totalPages,
+        hasPreviousPage: page > 1
+      }
+    };
   },
 
   async getById(id: string, userId: string) {

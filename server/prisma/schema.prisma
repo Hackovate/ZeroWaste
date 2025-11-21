@@ -15,6 +15,7 @@ model User {
   email               String   @unique
   passwordHash        String
   name                String
+  role                String   @default("user") // 'user' | 'admin'
   householdSize       Int      @default(1)
   dietaryPreferences  String[] // Array of dietary preferences
   budgetPreference    String?  // low, medium, high, premium
@@ -90,4 +91,27 @@ model Resource {
   createdAt   DateTime @default(now())
 
   @@index([category])
+}
+
+model Category {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([name])
+}
+
+model FoodDatabase {
+  id                 String   @id @default(cuid())
+  name               String
+  category           String // dairy, grain, fruit, vegetable, protein, oil
+  expirationEstimate Int // days (shelf life)
+  imageUrl           String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([name])
+  @@index([category])
+  @@unique([name])
 }

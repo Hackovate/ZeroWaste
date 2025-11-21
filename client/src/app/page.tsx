@@ -33,6 +33,9 @@ const Community = lazy(() =>
 const FoodScanning = lazy(() => 
     import('@/components/FoodScanning').then(module => ({ default: module.FoodScanning }))
 );
+const AdminDashboard = lazy(() => 
+    import('@/components/AdminDashboard').then(module => ({ default: module.AdminDashboard }))
+);
 
 export default function Home() {
     const { currentUser } = useApp();
@@ -99,6 +102,12 @@ export default function Home() {
                 return (
                     <Suspense fallback={<ComponentLoadingFallback />}>
                         <Community />
+                    </Suspense>
+                );
+            case 'admin':
+                return (
+                    <Suspense fallback={<ComponentLoadingFallback />}>
+                        <AdminDashboard />
                     </Suspense>
                 );
             default:

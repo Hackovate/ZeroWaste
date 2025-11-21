@@ -1,10 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
-
-interface JwtPayload {
-  id: string;
-  email: string;
-}
+import { verifyToken, JwtPayload } from '../utils/jwt';
+import prisma from '../config/database';
 
 export interface AuthRequest extends Request {
   user?: JwtPayload;
@@ -28,10 +24,7 @@ export const authenticate = (
 
     const token = authHeader.split(' ')[1];
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET!
-    ) as JwtPayload;
+    const decoded = verifyToken(token);
 
     req.user = decoded;
     next();

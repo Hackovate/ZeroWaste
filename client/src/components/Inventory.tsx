@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../lib/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -9,23 +9,50 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
-import { FOOD_DATABASE, FoodItem, UNITS } from '../lib/data';
-import { Plus, Trash2, Edit2, Package, Search, Settings, X, Upload, Image as ImageIcon } from 'lucide-react';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationEllipsis,
+} from './ui/pagination';
+import { FoodItem, UNITS } from '../lib/data';
+import { Plus, Trash2, Edit2, Package, Search, Settings, X, Upload, Image as ImageIcon, Check, ChevronsUpDown } from 'lucide-react';
 import { toast } from 'sonner';
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { LoadingSpinner } from './ui/loading';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from './ui/command';
+import { cn } from './ui/utils';
+
+const INVENTORY_PER_PAGE = 10;
 
 export const Inventory: React.FC = () => {
-  const { inventory, addInventoryItem, updateInventoryItem, deleteInventoryItem, categories, addCategory, deleteCategory, uploadInventoryImage } = useApp();
+  const { 
+    inventory, 
+    inventoryPagination,
+    foodDatabase,
+    addInventoryItem, 
+    updateInventoryItem, 
+    deleteInventoryItem, 
+    categories, 
+    uploadInventoryImage,
+    fetchInventory,
+    currentUser
+  } = useApp();
+  const [currentPage, setCurrentPage] = useState(1);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isFoodDbDialogOpen, setIsFoodDbDialogOpen] = useState(false);
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [foodDbSearch, setFoodDbSearch] = useState('');
-  const [newCategory, setNewCategory] = useState('');
+  const [matchedFoodItem, setMatchedFoodItem] = useState<FoodItem | null>(null);
+  const [itemNameSearchOpen, setItemNameSearchOpen] = useState(false);
+  const [itemNameSearchQuery, setItemNameSearchQuery] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const [loadingStates, setLoadingStates] = useState({
@@ -46,16 +73,87 @@ export const Inventory: React.FC = () => {
     imageUrl: '' as string | undefined,
   });
 
+  // Fetch inventory when page or filters change
+  useEffect(() => {
+    fetchInventory(currentPage, INVENTORY_PER_PAGE);
+  }, [currentPage, fetchInventory]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [categoryFilter, searchQuery]);
+
+  // Filter food database items based on search query - case-insensitive, starts with match
+  const filteredFoodDatabaseItems = React.useMemo(() => {
+    if (!itemNameSearchQuery) return foodDatabase;
+    const query = itemNameSearchQuery.toLowerCase();
+    return foodDatabase.filter(item => 
+      item.name.toLowerCase().startsWith(query) ||
+      item.name.toLowerCase().includes(query)
+    );
+  }, [foodDatabase, itemNameSearchQuery]);
+
+  // Handle food database item selection
+  const handleFoodDatabaseItemSelect = (foodItem: FoodItem) => {
+    setMatchedFoodItem(foodItem);
+    setFormData(prev => ({
+      ...prev,
+      name: foodItem.name,
+      category: foodItem.category,
+      expirationEstimate: foodItem.expirationEstimate,
+      imageUrl: foodItem.imageUrl || undefined, // Auto-fill image from food database
+    }));
+    // Set image preview (use food database image or empty.png fallback)
+    setImagePreview(foodItem.imageUrl || '/assets/food_database/empty.png');
+    setImageFile(null); // Clear any uploaded file to use food database image
+    setItemNameSearchOpen(false);
+    setItemNameSearchQuery('');
+  };
+
+  // Handle manual name input (when user types directly)
+  const handleNameChange = (name: string) => {
+    setFormData(prev => ({ ...prev, name }));
+    setItemNameSearchQuery(name);
+    // Check for exact match
+    const matched = foodDatabase.find(
+      item => item.name.toLowerCase() === name.toLowerCase()
+    );
+    if (matched) {
+      setMatchedFoodItem(matched);
+      setFormData(prev => ({
+        ...prev,
+        name: matched.name,
+        category: matched.category,
+        expirationEstimate: matched.expirationEstimate,
+        imageUrl: matched.imageUrl || undefined, // Auto-fill image from food database
+      }));
+      // Set image preview (use food database image or empty.png fallback)
+      setImagePreview(matched.imageUrl || '/assets/food_database/empty.png');
+      setImageFile(null); // Clear any uploaded file to use food database image
+    } else {
+      setMatchedFoodItem(null);
+    }
+  };
+
   const handleAddFromDatabase = async (foodItem: FoodItem) => {
     setLoadingStates(prev => ({ ...prev, addingFromDb: { ...prev.addingFromDb, [foodItem.id]: true } }));
     try {
-      await addInventoryItem({
-        ...foodItem,
-        quantity: 1,
-        unit: 'pcs',
+      // Open add dialog with pre-filled data from food database
+      setFormData({
+        name: foodItem.name,
+        category: foodItem.category,
+        expirationEstimate: foodItem.expirationEstimate,
+        price: 0, // User must set price
+        quantity: 1, // Default quantity
+        unit: 'pcs', // Default unit
+        imageUrl: foodItem.imageUrl || undefined, // Auto-fill image from food database
       });
+      setMatchedFoodItem(foodItem);
+      // Set image preview (use food database image or empty.png fallback)
+      setImagePreview(foodItem.imageUrl || '/assets/food_database/empty.png');
+      setImageFile(null); // Clear any uploaded file to use food database image
       setIsFoodDbDialogOpen(false);
-      toast.success(`${foodItem.name} added to inventory!`);
+      setIsAddDialogOpen(true);
     } finally {
       setLoadingStates(prev => ({ ...prev, addingFromDb: { ...prev.addingFromDb, [foodItem.id]: false } }));
     }
@@ -71,10 +169,16 @@ export const Inventory: React.FC = () => {
         imageUrl = await uploadInventoryImage(imageFile);
       }
       
+      // Use uploaded image if available, otherwise use food database image
+      const finalImageUrl = imageUrl || formData.imageUrl || undefined;
+      
       await addInventoryItem({
         ...formData,
-        imageUrl: imageUrl || undefined,
+        imageUrl: finalImageUrl,
       });
+      
+      // Refresh inventory to get updated pagination
+      await fetchInventory(currentPage, INVENTORY_PER_PAGE);
       
       setFormData({
         name: '',
@@ -87,6 +191,7 @@ export const Inventory: React.FC = () => {
       });
       setImageFile(null);
       setImagePreview('');
+      setMatchedFoodItem(null);
       setIsAddDialogOpen(false);
       toast.success('Item added to inventory!');
     } finally {
@@ -109,6 +214,9 @@ export const Inventory: React.FC = () => {
           ...formData,
           imageUrl,
         });
+        
+        // Refresh inventory to get updated data
+        await fetchInventory(currentPage, INVENTORY_PER_PAGE);
         
         setIsEditDialogOpen(false);
         setSelectedItem(null);
@@ -141,6 +249,8 @@ export const Inventory: React.FC = () => {
     setLoadingStates(prev => ({ ...prev, deleting: { ...prev.deleting, [id]: true } }));
     try {
       await deleteInventoryItem(id);
+      // Refresh inventory to get updated pagination
+      await fetchInventory(currentPage, INVENTORY_PER_PAGE);
       toast.success(`${name} removed from inventory!`);
     } finally {
       setLoadingStates(prev => ({ ...prev, deleting: { ...prev.deleting, [id]: false } }));
@@ -151,6 +261,8 @@ export const Inventory: React.FC = () => {
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
+      // Clear food database image when user uploads their own
+      setFormData(prev => ({ ...prev, imageUrl: undefined }));
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
@@ -159,19 +271,10 @@ export const Inventory: React.FC = () => {
     }
   };
 
-  const handleAddCategory = () => {
-    if (newCategory.trim()) {
-      addCategory(newCategory.trim());
-      setNewCategory('');
-      toast.success('Category added successfully!');
-    }
-  };
+  // Category management is now admin-only and handled in AdminDashboard
+  // This component only displays categories for filtering
 
-  const handleDeleteCategory = (category: string) => {
-    deleteCategory(category);
-    toast.success('Category deleted!');
-  };
-
+  // Client-side filtering for search and category (since pagination is server-side)
   const filteredInventory = inventory.filter(item => {
     const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -179,7 +282,94 @@ export const Inventory: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const filteredFoodDb = FOOD_DATABASE.filter(item =>
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const renderPagination = () => {
+    if (!inventoryPagination || inventoryPagination.totalPages <= 1) return null;
+
+    const { page, totalPages, hasNextPage, hasPreviousPage } = inventoryPagination;
+    const pages: (number | string)[] = [];
+    
+    // Generate page numbers
+    if (totalPages <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Show first page, ellipsis, current range, ellipsis, last page
+      pages.push(1);
+      if (page > 3) pages.push('ellipsis-start');
+      
+      const start = Math.max(2, page - 1);
+      const end = Math.min(totalPages - 1, page + 1);
+      
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+      
+      if (page < totalPages - 2) pages.push('ellipsis-end');
+      pages.push(totalPages);
+    }
+
+    return (
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (hasPreviousPage) handlePageChange(page - 1);
+              }}
+              className={!hasPreviousPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+          
+          {pages.map((p, idx) => {
+            if (p === 'ellipsis-start' || p === 'ellipsis-end') {
+              return (
+                <PaginationItem key={`ellipsis-${idx}`}>
+                  <PaginationEllipsis />
+                </PaginationItem>
+              );
+            }
+            return (
+              <PaginationItem key={p}>
+                <PaginationLink
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handlePageChange(p as number);
+                  }}
+                  isActive={page === p}
+                  className="cursor-pointer"
+                >
+                  {p}
+                </PaginationLink>
+              </PaginationItem>
+            );
+          })}
+          
+          <PaginationItem>
+            <PaginationNext
+              href="#"
+              onClick={(e) => {
+                e.preventDefault();
+                if (hasNextPage) handlePageChange(page + 1);
+              }}
+              className={!hasNextPage ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    );
+  };
+
+  const filteredFoodDb = foodDatabase.filter(item =>
     item.name.toLowerCase().includes(foodDbSearch.toLowerCase()) ||
     item.category.toLowerCase().includes(foodDbSearch.toLowerCase())
   );
@@ -207,50 +397,6 @@ export const Inventory: React.FC = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Settings className="w-4 h-4 mr-2" />
-                Categories
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Manage Categories</DialogTitle>
-                <DialogDescription>
-                  Add or remove food categories
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="New category name"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddCategory()}
-                  />
-                  <Button onClick={handleAddCategory}>
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="space-y-2 max-h-64 overflow-y-auto">
-                  {categories.map(category => (
-                    <div key={category} className="flex items-center justify-between p-2 border rounded-lg">
-                      <span className="capitalize">{category}</span>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDeleteCategory(category)}
-                      >
-                        <X className="w-4 h-4 text-destructive" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
           <Dialog open={isFoodDbDialogOpen} onOpenChange={setIsFoodDbDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
@@ -262,12 +408,12 @@ export const Inventory: React.FC = () => {
               <DialogHeader>
                 <DialogTitle>Food Database</DialogTitle>
                 <DialogDescription>
-                  Select items from our preloaded database
+                  Select items from our preloaded database. You'll set price and quantity when adding.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-(--color-700) w-4 h-4" />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[var(--color-700)] w-4 h-4" />
                   <Input
                     placeholder="Search food items..."
                     value={foodDbSearch}
@@ -277,17 +423,24 @@ export const Inventory: React.FC = () => {
                 </div>
                 <div className="grid gap-2">
                   {filteredFoodDb.map(item => (
-                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-(--color-300)/50 transition-colors">
-                      <div>
-                        <p>{item.name}</p>
-                        <div className="flex gap-2 mt-1">
-                          <Badge variant="outline" className="capitalize text-xs">{item.category}</Badge>
-                          <span className="text-xs text-(--color-700)">
-                            {item.expirationEstimate} days shelf life
-                          </span>
-                          <span className="text-xs text-(--color-700)">
-                            TK {item.price.toFixed(2)}
-                          </span>
+                    <div key={item.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-[var(--color-300)]/50 transition-colors">
+                      <div className="flex items-center gap-3 flex-1">
+                        <div className="w-16 h-16 rounded-md overflow-hidden border shrink-0">
+                          <ImageWithFallback
+                            src={item.imageUrl || '/assets/food_database/empty.png'}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                            fallbackSrc="/assets/food_database/empty.png"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium">{item.name}</p>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline" className="capitalize text-xs">{item.category}</Badge>
+                            <span className="text-xs text-[var(--color-700)]">
+                              {item.expirationEstimate} days shelf life
+                            </span>
+                          </div>
                         </div>
                       </div>
                       <Button 
@@ -314,30 +467,129 @@ export const Inventory: React.FC = () => {
             </DialogContent>
           </Dialog>
 
-          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <Dialog open={isAddDialogOpen} onOpenChange={(open) => {
+            setIsAddDialogOpen(open);
+            if (!open) {
+              // Reset form when dialog closes
+              setFormData({
+                name: '',
+                category: '',
+                expirationEstimate: 7,
+                price: 0,
+                quantity: 1,
+                unit: 'pcs',
+                imageUrl: '',
+              });
+              setMatchedFoodItem(null);
+              setImageFile(null);
+              setImagePreview('');
+              setItemNameSearchQuery('');
+              setItemNameSearchOpen(false);
+            }
+          }}>
             <DialogTrigger asChild>
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
-                Add Manual
+                Add Item
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Add Item Manually</DialogTitle>
+                <DialogTitle>Add Item</DialogTitle>
                 <DialogDescription>
-                  Add a custom item to your inventory
+                  {matchedFoodItem 
+                    ? `Matched with ${matchedFoodItem.name} from database. You can edit all fields.`
+                    : 'Add a new item to your inventory'
+                  }
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleAddManual} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Item Name</Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g., Organic Milk"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
-                  />
+                  <div className="relative">
+                    <Input
+                      id="name"
+                      placeholder="Type to search food items..."
+                      value={formData.name}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        handleNameChange(value);
+                        setItemNameSearchQuery(value);
+                        setItemNameSearchOpen(value.length > 0 && filteredFoodDatabaseItems.length > 0);
+                      }}
+                      onFocus={() => {
+                        if (formData.name && filteredFoodDatabaseItems.length > 0) {
+                          setItemNameSearchOpen(true);
+                        }
+                      }}
+                      onBlur={() => {
+                        // Delay closing to allow click on dropdown items
+                        setTimeout(() => {
+                          const activeElement = document.activeElement;
+                          // Check if focus moved to dropdown or stayed in input
+                          if (activeElement && activeElement.closest('.absolute')) {
+                            return; // Don't close if clicking dropdown
+                          }
+                          setItemNameSearchOpen(false);
+                        }, 200);
+                      }}
+                      required
+                    />
+                    {itemNameSearchOpen && filteredFoodDatabaseItems.length > 0 && (
+                      <div className="absolute z-[100] w-full mt-1 bg-white dark:bg-gray-800 border rounded-md shadow-lg max-h-[300px] overflow-auto">
+                        <div className="p-1">
+                          {filteredFoodDatabaseItems.slice(0, 10).map((item) => (
+                            <div
+                              key={item.id}
+                              onMouseDown={(e) => {
+                                e.preventDefault(); // Prevent input blur
+                                handleFoodDatabaseItemSelect(item);
+                                setItemNameSearchOpen(false);
+                              }}
+                              className={cn(
+                                "flex items-center gap-2 px-3 py-2 rounded-sm cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
+                                matchedFoodItem?.id === item.id && "bg-gray-100 dark:bg-gray-700"
+                              )}
+                            >
+                              <Check
+                                className={cn(
+                                  "h-4 w-4 shrink-0",
+                                  matchedFoodItem?.id === item.id ? "opacity-100" : "opacity-0"
+                                )}
+                              />
+                              <div className="w-10 h-10 rounded-md overflow-hidden border shrink-0">
+                                <ImageWithFallback
+                                  src={item.imageUrl || '/assets/food_database/empty.png'}
+                                  alt={item.name}
+                                  className="w-full h-full object-cover"
+                                  fallbackSrc="/assets/food_database/empty.png"
+                                />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-medium">{item.name}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2 mt-0.5">
+                                  <span className="capitalize">{item.category}</span>
+                                  <span>•</span>
+                                  <span>{item.expirationEstimate} days shelf life</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {itemNameSearchOpen && filteredFoodDatabaseItems.length === 0 && itemNameSearchQuery && (
+                      <div className="absolute z-[100] w-full mt-1 bg-white dark:bg-gray-800 border rounded-md shadow-lg p-3 text-sm text-gray-500 dark:text-gray-400">
+                        No items found. "{itemNameSearchQuery}" will be added as a new item.
+                      </div>
+                    )}
+                  </div>
+                  {matchedFoodItem && (
+                    <p className="text-xs text-primary flex items-center gap-1 mt-1">
+                      <Search className="w-3 h-3" />
+                      Matched: {matchedFoodItem.name} (auto-filled category & shelf life - you can edit)
+                    </p>
+                  )}
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -478,7 +730,9 @@ export const Inventory: React.FC = () => {
               <div>
                 <CardTitle className="text-xl">Current Inventory</CardTitle>
                 <CardDescription className="mt-1">
-                  {filteredInventory.length} of {inventory.length} items
+                  {inventoryPagination 
+                    ? `Showing ${inventory.length} of ${inventoryPagination.total} items (Page ${inventoryPagination.page} of ${inventoryPagination.totalPages})`
+                    : `${inventory.length} items`}
                 </CardDescription>
               </div>
             </div>
@@ -512,106 +766,106 @@ export const Inventory: React.FC = () => {
         </CardHeader>
         <CardContent>
           {filteredInventory.length > 0 ? (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-16">Image</TableHead>
-                    <TableHead>Item Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead>Days in Stock</TableHead>
-                    <TableHead>Shelf Life</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredInventory.map(item => {
-                    const expirationInfo = getExpirationStatus(item);
-                    const daysInInventory = getDaysInInventory(item.dateAdded);
-                    
-                    return (
-                      <TableRow 
-                        key={item.id} 
-                        className="hover:bg-muted/50 transition-colors cursor-pointer"
-                        onClick={() => openEditDialog(item)}
-                      >
-                        <TableCell>
-                          {item.imageUrl ? (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-16">Image</TableHead>
+                      <TableHead>Item Name</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Quantity</TableHead>
+                      <TableHead>Price</TableHead>
+                      <TableHead>Days in Stock</TableHead>
+                      <TableHead>Shelf Life</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredInventory.map(item => {
+                      const expirationInfo = getExpirationStatus(item);
+                      const daysInInventory = getDaysInInventory(item.dateAdded);
+                      
+                      return (
+                        <TableRow 
+                          key={item.id} 
+                          className="hover:bg-muted/50 transition-colors cursor-pointer"
+                          onClick={() => openEditDialog(item)}
+                        >
+                          <TableCell>
                             <div className="relative w-12 h-12 rounded-md overflow-hidden border">
                               <ImageWithFallback
-                                src={item.imageUrl}
+                                src={item.imageUrl || '/assets/food_database/empty.png'}
                                 alt={item.name}
                                 className="w-full h-full object-cover"
+                                fallbackSrc="/assets/food_database/empty.png"
                               />
                             </div>
-                          ) : (
-                            <div className="w-12 h-12 rounded-md bg-muted flex items-center justify-center">
-                              <Package className="w-5 h-5 text-muted-foreground" />
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">{item.name}</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="capitalize">
+                              {item.category}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              {item.quantity} {item.unit || 'pcs'}
                             </div>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">{item.name}</div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="capitalize">
-                            {item.category}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            {item.quantity} {item.unit || 'pcs'}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="font-medium">TK {item.price.toFixed(2)}</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">{daysInInventory} days</div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">{item.expirationEstimate} days</div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant={expirationInfo.color as any} className="capitalize">
-                            {expirationInfo.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => openEditDialog(item)}
-                              disabled={loadingStates.deleting[item.id]}
-                              className="h-8 w-8 p-0"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="ghost" 
-                              onClick={() => handleDelete(item.id, item.name)}
-                              disabled={loadingStates.deleting[item.id]}
-                              className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                            >
-                              {loadingStates.deleting[item.id] ? (
-                                <LoadingSpinner size="sm" />
-                              ) : (
-                                <Trash2 className="w-4 h-4" />
-                              )}
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="font-medium">TK {item.price ? item.price.toFixed(2) : '0.00'}</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">{daysInInventory} days</div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">{item.expirationEstimate} days</div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={expirationInfo.color as any} className="capitalize">
+                              {expirationInfo.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => openEditDialog(item)}
+                                disabled={loadingStates.deleting[item.id]}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Edit2 className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="ghost" 
+                                onClick={() => handleDelete(item.id, item.name)}
+                                disabled={loadingStates.deleting[item.id]}
+                                className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                              >
+                                {loadingStates.deleting[item.id] ? (
+                                  <LoadingSpinner size="sm" />
+                                ) : (
+                                  <Trash2 className="w-4 h-4" />
+                                )}
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="mt-6 flex justify-center">
+                {renderPagination()}
+              </div>
+            </>
           ) : (
             <div className="text-center py-12">
               <Package className="w-16 h-16 text-(--color-300) mx-auto mb-4" />
@@ -621,13 +875,25 @@ export const Inventory: React.FC = () => {
               </p>
               {!searchQuery && (
                 <div className="flex gap-2 justify-center">
-                  <Button onClick={() => setIsFoodDbDialogOpen(true)} variant="outline">
+                  <Button variant="outline" onClick={() => setIsFoodDbDialogOpen(true)}>
                     <Search className="w-4 h-4 mr-2" />
                     Browse Database
                   </Button>
-                  <Button onClick={() => setIsAddDialogOpen(true)}>
+                  <Button onClick={() => {
+                    setFormData({
+                      name: '',
+                      category: '',
+                      expirationEstimate: 7,
+                      price: 0,
+                      quantity: 1,
+                      unit: 'pcs',
+                      imageUrl: '',
+                    });
+                    setMatchedFoodItem(null);
+                    setIsAddDialogOpen(true);
+                  }}>
                     <Plus className="w-4 h-4 mr-2" />
-                    Add Manual
+                    Add Item
                   </Button>
                 </div>
               )}
