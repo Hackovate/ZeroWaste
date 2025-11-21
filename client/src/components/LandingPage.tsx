@@ -117,11 +117,11 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
           <div className="text-center relative z-10">
             <div className="flex justify-center mb-6 animate-fade-in">
               <div className="h-20 sm:h-24 flex items-center justify-center transform hover:scale-105 transition-transform duration-300">
-                <img src="/assets/ZeroWaste-Full-Logo.svg" alt="FoodTrack" className="h-full drop-shadow-lg" />
+                <img src="/assets/ZeroWaste-Full-Logo.svg" alt="ZeroWaste" className="h-full drop-shadow-lg" />
               </div>
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold bg-gradient-to-r from-primary via-[#FF6B63] to-primary bg-clip-text text-transparent mb-4 animate-slide-up">
-              Welcome to FoodTrack
+              Welcome to ZeroWaste
             </h1>
             <p className="text-lg sm:text-xl text-gray-700 max-w-2xl mx-auto mb-8 animate-slide-up animation-delay-200">
               Your intelligent companion for reducing food waste, saving money, and living sustainably
@@ -132,12 +132,9 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 size="lg" 
                 className="h-12 px-8 text-base font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group"
               >
-                Get Started Free
+                Get Started
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <p className="text-sm text-gray-600">
-                No credit card required • Free forever
-              </p>
             </div>
           </div>
         </div>
@@ -148,7 +145,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-bold mb-3 bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-              Why Choose FoodTrack?
+              Why Choose ZeroWaste?
             </h2>
             <p className="text-base text-gray-600 max-w-2xl mx-auto">
               Join thousands of households making a difference in food waste reduction
@@ -270,7 +267,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
                 Ready to Make a Difference?
               </h2>
               <p className="text-base sm:text-lg mb-8 text-white/95 max-w-2xl mx-auto">
-                Join FoodTrack today and start your journey towards sustainable living and smarter food management
+                Join ZeroWaste today and start your journey towards sustainable living and smarter food management
               </p>
               <Button 
                 onClick={onGetStarted} 
@@ -290,7 +287,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
       <div className="border-t border-gray-200 bg-white py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center text-gray-600">
-            <p className="mb-1 text-sm">© 2025 FoodTrack. All rights reserved.</p>
+            <p className="mb-1 text-sm">© 2025 ZeroWaste. All rights reserved.</p>
             <p className="text-xs text-gray-500">Making food waste reduction accessible to everyone</p>
           </div>
         </div>
