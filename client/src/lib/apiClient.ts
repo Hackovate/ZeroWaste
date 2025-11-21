@@ -19,9 +19,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      // Don't redirect automatically, let the app handle it
+      // Just clear the token to be safe
       localStorage.removeItem('authToken');
       localStorage.removeItem('currentUser');
-      window.location.href = '/';
+      
+      // Dispatch a custom event so the app can react if needed
+      window.dispatchEvent(new Event('auth:unauthorized'));
     }
     return Promise.reject(error);
   }

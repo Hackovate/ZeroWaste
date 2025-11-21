@@ -46,7 +46,7 @@ export const TopBar: React.FC<TopBarProps> = ({ currentView, onNavigate }) => {
             className="cursor-pointer select-none h-12" 
             onClick={() => onNavigate('dashboard')}
           >
-            <img src="/assets/ZeroWaste-Full-Logo.svg" alt="FoodTrack" className="h-full" />
+            <img src="/assets/ZeroWaste-Full-Logo.svg" alt="ZeroWaste" className="h-full" />
           </div>
         </div>
 

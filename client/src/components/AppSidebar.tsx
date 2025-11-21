@@ -126,7 +126,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
       <div className="p-4 border-t bg-gray-50">
         {!isCollapsed ? (
           <div className="space-y-1">
-            <p className="text-xs font-semibold text-gray-900">FoodTrack</p>
+            <p className="text-xs font-semibold text-gray-900">ZeroWaste</p>
             <p className="text-xs text-gray-500">Version 1.0.0</p>
           </div>
         ) : (

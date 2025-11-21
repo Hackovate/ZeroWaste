@@ -36,7 +36,7 @@ export const Onboarding: React.FC = () => {
         ...onboardingData,
         onboardingCompleted: true,
       });
-      toast.success('Welcome to FoodTrack! 🎉');
+      toast.success('Welcome to ZeroWaste! 🎉');
     }
   };
 
@@ -72,7 +72,7 @@ export const Onboarding: React.FC = () => {
               <ChefHat className="w-8 h-8 text-white" />
             </div>
           </div>
-          <CardTitle className="text-primary">Welcome to FoodTrack!</CardTitle>
+          <CardTitle className="text-primary">Welcome to ZeroWaste!</CardTitle>
           <CardDescription>
             Let's personalize your experience. This will only take a moment.
           </CardDescription>
