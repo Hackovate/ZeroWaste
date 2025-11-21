@@ -1,6 +1,8 @@
 import argon2 from 'argon2';
 import prisma from '../config/database';
 import { generateToken } from '../utils/jwt';
+import { seedResources } from '../utils/seedResources';
+import { seedInventory } from '../utils/seedInventory';
 
 export const authService = {
   async register(data: {
@@ -50,6 +52,11 @@ export const authService = {
 
     // Generate JWT token
     const token = generateToken({ id: user.id, email: user.email });
+
+    // Seed resources and inventory for new user (non-blocking)
+    // These run asynchronously and won't block registration if they fail
+    seedResources().catch(err => console.error('Failed to seed resources:', err));
+    seedInventory(user.id).catch(err => console.error('Failed to seed inventory:', err));
 
     return { user, token };
   },

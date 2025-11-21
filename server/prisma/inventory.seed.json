@@ -1,0 +1,163 @@
+[
+  {
+    "name": "Milk",
+    "category": "dairy",
+    "quantity": 1,
+    "unit": "ltr",
+    "expirationEstimate": 7,
+    "price": 99.00
+  },
+  {
+    "name": "Cheddar Cheese",
+    "category": "dairy",
+    "quantity": 0.5,
+    "unit": "kg",
+    "expirationEstimate": 30,
+    "price": 150.00
+  },
+  {
+    "name": "Yogurt",
+    "category": "dairy",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 14,
+    "price": 120.00
+  },
+  {
+    "name": "White Bread",
+    "category": "grain",
+    "quantity": 1,
+    "unit": "pcs",
+    "expirationEstimate": 7,
+    "price": 80.00
+  },
+  {
+    "name": "Brown Rice",
+    "category": "grain",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 365,
+    "price": 200.00
+  },
+  {
+    "name": "Pasta",
+    "category": "grain",
+    "quantity": 0.5,
+    "unit": "kg",
+    "expirationEstimate": 730,
+    "price": 60.00
+  },
+  {
+    "name": "Bananas",
+    "category": "fruit",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 5,
+    "price": 50.00
+  },
+  {
+    "name": "Apples",
+    "category": "fruit",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 14,
+    "price": 120.00
+  },
+  {
+    "name": "Strawberries",
+    "category": "fruit",
+    "quantity": 0.5,
+    "unit": "kg",
+    "expirationEstimate": 5,
+    "price": 180.00
+  },
+  {
+    "name": "Carrots",
+    "category": "vegetable",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 21,
+    "price": 70.00
+  },
+  {
+    "name": "Broccoli",
+    "category": "vegetable",
+    "quantity": 1,
+    "unit": "pcs",
+    "expirationEstimate": 7,
+    "price": 90.00
+  },
+  {
+    "name": "Spinach",
+    "category": "vegetable",
+    "quantity": 0.5,
+    "unit": "kg",
+    "expirationEstimate": 7,
+    "price": 100.00
+  },
+  {
+    "name": "Chicken Breast",
+    "category": "protein",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 2,
+    "price": 280.00
+  },
+  {
+    "name": "Ground Beef",
+    "category": "protein",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 2,
+    "price": 250.00
+  },
+  {
+    "name": "Eggs",
+    "category": "protein",
+    "quantity": 12,
+    "unit": "pcs",
+    "expirationEstimate": 28,
+    "price": 140.00
+  },
+  {
+    "name": "Olive Oil",
+    "category": "oil",
+    "quantity": 1,
+    "unit": "ltr",
+    "expirationEstimate": 365,
+    "price": 350.00
+  },
+  {
+    "name": "Butter",
+    "category": "dairy",
+    "quantity": 0.5,
+    "unit": "kg",
+    "expirationEstimate": 90,
+    "price": 160.00
+  },
+  {
+    "name": "Tomatoes",
+    "category": "vegetable",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 7,
+    "price": 100.00
+  },
+  {
+    "name": "Onions",
+    "category": "vegetable",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 30,
+    "price": 60.00
+  },
+  {
+    "name": "Potatoes",
+    "category": "vegetable",
+    "quantity": 1,
+    "unit": "kg",
+    "expirationEstimate": 60,
+    "price": 150.00
+  }
+]
+

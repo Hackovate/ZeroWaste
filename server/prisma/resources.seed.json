@@ -1,0 +1,143 @@
+[
+  {
+    "title": "How to Store Vegetables Properly",
+    "description": "Tips on storing fruits and vegetables to extend freshness.",
+    "url": "https://www.lovefoodhatewaste.com/article/how-store-fruit-and-veg",
+    "category": "Waste Reduction",
+    "type": "article"
+  },
+  {
+    "title": "FoodKeeper Storage Guide (USDA)",
+    "description": "USDA's official guide on food storage and shelf life.",
+    "url": "https://www.foodsafety.gov/keep-food-safe/foodkeeper-app",
+    "category": "Waste Reduction",
+    "type": "article"
+  },
+  {
+    "title": "Reducing Wasted Food at Home (EPA)",
+    "description": "EPA-recommended steps for reducing household food waste.",
+    "url": "https://www.epa.gov/recycle/reducing-wasted-food-home",
+    "category": "Waste Reduction",
+    "type": "article"
+  },
+  {
+    "title": "UN WFP – Tips to Reduce Food Waste",
+    "description": "UN World Food Programme's tips for reducing food waste.",
+    "url": "https://www.wfp.org/stories/8-tips-reduce-your-food-waste",
+    "category": "Waste Reduction",
+    "type": "article"
+  },
+  {
+    "title": "WRAP Food Waste Action Guide",
+    "description": "Guidelines for reducing household food waste.",
+    "url": "https://wrap.org.uk/taking-action/food-waste",
+    "category": "Waste Reduction",
+    "type": "article"
+  },
+  {
+    "title": "NYT Beginner's Guide to Meal Planning",
+    "description": "A complete introduction to weekly meal planning.",
+    "url": "https://cooking.nytimes.com/guides/48-how-to-meal-plan",
+    "category": "Meal Planning",
+    "type": "article"
+  },
+  {
+    "title": "Meal Prep for Beginners",
+    "description": "Easy weekly meal prep tutorial for beginners.",
+    "url": "https://www.youtube.com/watch?v=8gF8h7v1wQk",
+    "category": "Meal Planning",
+    "type": "youtube"
+  },
+  {
+    "title": "Weekly Meal Planner Template (PDF)",
+    "description": "Printable template for planning meals weekly.",
+    "url": "https://www.vertex42.com/Files/pdfs/meal-planner.pdf",
+    "category": "Meal Planning",
+    "type": "pdf"
+  },
+  {
+    "title": "Harvard Healthy Eating Plate",
+    "description": "Evidence-based guide for building healthy meals.",
+    "url": "https://www.hsph.harvard.edu/nutritionsource/healthy-eating-plate/",
+    "category": "Nutrition Tips",
+    "type": "article"
+  },
+  {
+    "title": "BBC GoodFood Budget-Friendly Recipes",
+    "description": "Affordable and nutritious recipe ideas.",
+    "url": "https://www.bbcgoodfood.com/recipes/collection/budget-recipes",
+    "category": "Meal Planning",
+    "type": "article"
+  },
+  {
+    "title": "WHO Healthy Diet Guidelines",
+    "description": "Science-based global dietary recommendations.",
+    "url": "https://www.who.int/news-room/fact-sheets/detail/healthy-diet",
+    "category": "Nutrition Tips",
+    "type": "article"
+  },
+  {
+    "title": "Healthy Eating Tips for Beginners",
+    "description": "Simple steps for building healthy eating habits.",
+    "url": "https://www.healthline.com/nutrition/healthy-eating-tips",
+    "category": "Nutrition Tips",
+    "type": "blog"
+  },
+  {
+    "title": "Macronutrients Explained",
+    "description": "Beginner-friendly breakdown of proteins, carbs, and fats.",
+    "url": "https://www.medicalnewstoday.com/articles/322744",
+    "category": "Nutrition Tips",
+    "type": "article"
+  },
+  {
+    "title": "High Protein Budget Meals",
+    "description": "Budget-friendly high protein meal ideas.",
+    "url": "https://www.youtube.com/watch?v=7Hc7Zlg9e48",
+    "category": "Nutrition Tips",
+    "type": "youtube"
+  },
+  {
+    "title": "50 Ways to Save Money on Groceries",
+    "description": "Practical techniques to reduce grocery spending.",
+    "url": "https://www.thepennyhoarder.com/save-money/save-money-groceries/",
+    "category": "Budget Tips",
+    "type": "blog"
+  },
+  {
+    "title": "Cheap & Healthy Foods (Harvard)",
+    "description": "Affordable healthy food list from Harvard Nutrition.",
+    "url": "https://www.hsph.harvard.edu/nutritionsource/cheap-healthy-foods/",
+    "category": "Budget Tips",
+    "type": "article"
+  },
+  {
+    "title": "Grocery Budgeting 101",
+    "description": "Beginner's guide to managing grocery expenses.",
+    "url": "https://moneyunder30.com/grocery-budget",
+    "category": "Budget Tips",
+    "type": "article"
+  },
+  {
+    "title": "Save Money with Batch Cooking",
+    "description": "Bulk meal prep to reduce monthly food expenses.",
+    "url": "https://www.youtube.com/watch?v=csuYqzJH5e8",
+    "category": "Budget Tips",
+    "type": "youtube"
+  },
+  {
+    "title": "Earth.org Sustainable Living Guide",
+    "description": "Beginner-friendly guide to living sustainably.",
+    "url": "https://www.earth.org/sustainable-living-guide/",
+    "category": "Waste Reduction",
+    "type": "article"
+  },
+  {
+    "title": "Zero Waste Kitchen Guide",
+    "description": "Tips for creating a low-waste kitchen environment.",
+    "url": "https://www.goingzerowaste.com/blog/zero-waste-kitchen/",
+    "category": "Waste Reduction",
+    "type": "blog"
+  }
+]
+
